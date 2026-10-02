@@ -1,4 +1,6 @@
-const urlAPI = "http://127.0.0.1:8000/";
+const urlAPI = "https://motorepweb-api-h3ahb3c6hgfebpa6.centralus-01.azurewebsites.net/";
+
+//const urlAPI = "http://127.0.0.1:8000/";
 
 import { registrarControlInactividad,logout, fetchConAutenticacion } from "../login/auth.js";
 
@@ -144,7 +146,7 @@ export async function cargarClientes() {
     activarBuscadorGlobal('buscarCliente','#bodyCliente tr')
     
   } catch (error) {
-    cargando.textContent = '⚠ Error al conectar con la API local. ¿Está corriendo el servidor Django?';
+    cargando.textContent = '⚠ Error al conectar con la API';
     console.error('Error en cargarClientes:', error); 
   }
 }
@@ -470,7 +472,7 @@ async function cargarFactura() {
     activarBuscadorGlobal('buscarFactura','#bodyFactura tr')
 
   } catch (error) {
-    cargando.textContent = '⚠ Error al conectar con la API local. ¿Está corriendo el servidor Django?';
+    cargando.textContent = '⚠ Error al conectar con la API';
     console.error('Error en cargarFactura:', error); 
   }
 }
