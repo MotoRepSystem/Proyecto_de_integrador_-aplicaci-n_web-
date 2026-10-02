@@ -1,0 +1,73 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoRep Emanuel</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+        }
+
+        .cargando {
+            text-align: center;
+        }
+
+        .cargando h1 {
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .cargando p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .spinner {
+            width: 45px;
+            height: 45px;
+            margin: 25px auto;
+            border: 5px solid #ddd;
+            border-top: 5px solid #333;
+            border-radius: 50%;
+            animation: girar 1s linear infinite;
+        }
+
+        @keyframes girar {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="cargando">
+        <h1>MotoRep Emanuel</h1>
+        <p>Espere mientras se carga el sistema...</p>
+
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        setTimeout(function () {
+            window.location.href = "LOGIN/login.html";
+        }, 1500);
+    </script>
+
+</body>
+</html>
+```
