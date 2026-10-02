@@ -1,11 +1,15 @@
 from .settings import *
 from decouple import config
+import os
 
 DEBUG = False
 
 ALLOWED_HOSTS = [
     config('ALLOWED_HOST'),
 ]
+
+print(">>> DB_HOST DESDE DJANGO:", os.environ.get("DB_HOST"))
+print(">>> DB_USER DESDE DJANGO:", os.environ.get("DB_USER"))
 
 DATABASES = {
     'default': {
