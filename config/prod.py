@@ -38,3 +38,7 @@ DATABASES = {
         },
     },
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{config('ALLOWED_HOST')}",
+]
