@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - MotoRep Emanuel</title>
+    
+    <!-- Fuente moderna Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,34 +23,30 @@
 
         <section class="login_form_section">
             <h2 class="text-login">Iniciar sesión</h2>
-            <form  id="formulario">
+            <form id="formulario">
                 <div class="username">
-                    <label for="username"class="txt-from" >USUARIO</label>
-                    <input type="text" id="username" class="input_user">
+                    <label for="username" class="txt-from">USUARIO</label>
+                    <input type="text" id="username" class="input_user" placeholder="Ingresa tu usuario" autocomplete="username" required>
                 </div>
                 <div class="contrasena">
-                    <label for="passwoord" class="txt-from" >CONTRASEÑA</label>
-                    <input type="password" id="password" class="input_user">
+                    <label for="password" class="txt-from">CONTRASEÑA</label>
+                    <input type="password" id="password" class="input_user" placeholder="••••••••" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="btn_iniciar">INICIAR</button>
 
                 <p class="errorLogin" id="errorMensaje"></p>
             </form>
         </section>
-
     </main>
+
+    <!-- Overlay de carga -->
     <div id="pantalla-carga" class="overlay-carga">
         <div class="spinner-contenedor">
             <div class="spinner"></div>
             <p>Autentificando, por favor espere...</p>
         </div>
-
-        </div>
-
     </div>
 
-
     <script type="module" src="./auth.js"></script>
-
 </body>
 </html>
