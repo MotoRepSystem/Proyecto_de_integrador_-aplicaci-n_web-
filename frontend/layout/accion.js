@@ -1,4 +1,4 @@
-const urlAPI = "http://127.0.0.1:8000/";
+//const urlAPI = "http://127.0.0.1:8000/";
 
 import { registrarControlInactividad,logout, fetchConAutenticacion } from "../login/auth.js";
 
@@ -43,6 +43,57 @@ navLinks.forEach(function(link) {
     tituloTop.textContent = link.textContent;
   });
 });
+
+window.openPaymentDrawer = function () {
+    let errorEl = document.getElementById('errorfactura');
+    if (errorEl) errorEl.textContent = '';
+
+    const numFactura  = document.getElementById('facturaNumero').value.trim();
+    const clienteId   = document.getElementById('facturaCliente').value;
+    const condicionId = document.getElementById('facturaCondicion').value; // 1: Contado, 2: Crédito
+
+    if (!numFactura || !clienteId || !condicionId) {
+        if (errorEl) errorEl.textContent = '⚠️ Por favor, llena todos los campos principales.';
+        return;
+    }
+
+    if (ncFacturaProductosTemp.length === 0) {
+        alert('⚠️ Agrega al menos un producto a la lista.');
+        return;
+    }
+    // 1. Obtener el texto del elemento <td> (usando textContent)
+    const valorTotal = document.getElementById('facTotal')?.textContent || 'C$ 0.00';
+    
+    // 2. Corregir la sintaxis de getElementById (sin la 'I' al final)
+    const textValor = document.getElementById('textTotalMovimentoPagoFactura');
+
+    // 3. Asignar el texto en el panel lateral de pago
+    if (textValor) {
+        textValor.textContent = valorTotal;
+    }
+
+    // 4. Abrir el drawer lateral
+    const drawer = document.getElementById('paymentDrawer');
+    if (drawer) {
+        drawer.classList.add('open');
+    }
+};
+window.closePaymentDrawer= function () {
+            document.getElementById('paymentDrawer').classList.remove('open');
+        }
+window.FacturaCreditoField=function () {
+    const condicion = document.getElementById('facturaCondicion').value;
+    const fieldFecha = document.getElementById('facturaFechaLimite');
+
+    console.log(typeof condicion);
+
+    console.log(`valor ${condicion}`)
+    if(condicion == 2) {
+        fieldFecha.style.display = 'flex';
+    } else {
+        fieldFecha.style.display = 'none';
+    }
+}
 // ==========================================
 // LOGICA DE cerrar sesion
 // ==========================================
@@ -536,7 +587,7 @@ async function cargarOpcionesCondicion () {
     console.error('No se pudieron cargar los departamentos para el select:', error);
   }
 }
-
+/*
 async function cargarOpcionesEstados () {
   var select = document.getElementById('facturaEstado');
 
@@ -566,66 +617,200 @@ async function cargarOpcionesEstados () {
   } catch (error) {
     console.error('No se pudieron cargar los departamentos para el select:', error);
   }
-}
+}*/
  
-async function cargarOpcionesDetalles () {
-  var select = document.getElementById('facturaProducto');
+let inventarioLotesGlobal = [];
 
-  // Limpiar las opciones anteriores
-  select.innerHTML = '<option value="">-- Seleccione un producto --</option>';
-
-  try {
-    var respuesta    = await fetchConAutenticacion('movimiento/productos/destalle/');
-    var datos        = await respuesta.json();
-    var detallesP = Array.isArray(datos) ? datos : datos.results;
-
-    // Crear un <option> por cada departamento.
-    // value = id (lo que se envía al API como FK)
-    // textContent = nombre (lo que ve el usuario)
-
-    //console.log('datos recibidos de la api: ', detallesP);
+// 1. CARGAR PRODUCTOS ÚNICOS CON STOCK
+async function cargarOpcionesDetalles() {
+    const selectProd = document.getElementById('facturaProducto');
+    const selectLote = document.getElementById('facturalote');
     
-    
-    for (var i = 0; i < detallesP.length; i++) {
-      var f      = detallesP[i];
-      var option = document.createElement('option');
-      option.value       = f.id;     // ← esto es lo que se envía  en el body
-      option.textContent =`${f.producto_nombre}-marca: ${f.marca_nombre}-Moto: ${f.moto_modelo}`; // ← esto es lo que ve el usuario
-      select.appendChild(option);
+    if (!selectProd || !selectLote) return;
+
+    selectProd.innerHTML = '<option value="">-- Seleccione un producto --</option>';
+    selectLote.innerHTML = '<option value="">-- Primero elija un producto --</option>';
+    selectLote.disabled = true;
+
+    try {
+        const respuesta = await fetchConAutenticacion('movimiento/productos/inventarioLote/');
+        const datos = await respuesta.json();
+        
+        // Guardamos únicamente los lotes que tienen stock disponible (Cantidad > 0)
+        const listaCompleta = Array.isArray(datos) ? datos : (datos.results || []);
+        inventarioLotesGlobal = listaCompleta.filter(lote => parseInt(lote.Cantidad) > 0);
+
+        console.log('Lotes con stock disponible:', inventarioLotesGlobal);
+
+        const productosUnicos = new Map();
+        
+        inventarioLotesGlobal.forEach(lote => {
+            // Usamos el nombre del producto como identificador único para el primer select
+            const nombreProducto = lote.detalle_producto;
+
+            if (nombreProducto && !productosUnicos.has(nombreProducto)) {
+                productosUnicos.set(nombreProducto, nombreProducto);
+            }
+        });
+
+        // Cargar el primer select sin duplicados
+        productosUnicos.forEach((nombre) => {
+            const option = document.createElement('option');
+            option.value = nombre; // El valor será el nombre exacto del producto
+            option.textContent = nombre;
+            selectProd.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error('Error al cargar inventario:', error);
+    }
+}
+
+// 2. FILTRAR LOTES POR PRODUCTO SELECCIONADO
+window.alCambiarProducto = function() {
+    const nombreProductoSeleccionado = document.getElementById('facturaProducto').value;
+    const selectLote = document.getElementById('facturalote');
+    const inputPrecio = document.getElementById('facturaPrecio');
+    const inputStockInfo = document.getElementById('stockinfo');
+
+    selectLote.innerHTML = '<option value="">-- Seleccione un lote --</option>';
+    inputPrecio.value = '';
+    if (inputStockInfo) inputStockInfo.textContent = '';
+
+    if (!nombreProductoSeleccionado) {
+        selectLote.disabled = true;
+        return;
     }
 
-  } catch (error) {
-    console.error('No se pudieron cargar los departamentos para el select:', error);
-  }
+    // Filtrar únicamente los lotes con stock que coinciden con el producto seleccionado
+    const lotesDelProducto = inventarioLotesGlobal.filter(lote => 
+        lote.detalle_producto === nombreProductoSeleccionado && parseInt(lote.Cantidad) > 0
+    );
+
+    if (lotesDelProducto.length === 0) {
+        selectLote.innerHTML = '<option value="">-- Sin stock disponible --</option>';
+        selectLote.disabled = true;
+        return;
+    }
+
+    // Poblar el segundo select con los lotes correspondientes
+    lotesDelProducto.forEach(lote => {
+        const option = document.createElement('option');
+        option.value = lote.id; // ID del lote (RegistroProducto) requerido por la API
+        option.dataset.precio = lote.PrecioVenta;
+        option.dataset.stock = lote.Cantidad;
+
+        const fecha = lote.FechaRegistro ? new Date(lote.FechaRegistro).toLocaleDateString() : '';
+        option.textContent = `Lote #${lote.id} - Reg: ${fecha} (Disponibles: ${lote.Cantidad} | C$ ${lote.PrecioVenta})`;
+        selectLote.appendChild(option);
+    });
+
+    selectLote.disabled = false;
+};
+
+// 3. AUTOCOMPLETAR PRECIO Y MOSTRAR DISPONIBILIDAD DE LOTE
+window.alCambiarLote = function() {
+    const selectLote = document.getElementById('facturalote');
+    const optionSelected = selectLote.selectedOptions[0];
+    const inputPrecio = document.getElementById('facturaPrecio');
+    const inputStockInfo = document.getElementById('stockinfo');
+
+    if (optionSelected && optionSelected.dataset.precio) {
+        inputPrecio.value = parseFloat(optionSelected.dataset.precio).toFixed(2);
+        if (inputStockInfo) {
+            inputStockInfo.textContent = `Disponible en este lote: ${optionSelected.dataset.stock} unidades`;
+        }
+    } else {
+        inputPrecio.value = '';
+        if (inputStockInfo) inputStockInfo.textContent = '';
+    }
+};
+
+// ========================================== METODO DE PAGOS ==========================================
+async function cargarOpcionesPago() {
+    const select = document.getElementById('facturaMetodoPago');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Seleccione un método de pago --</option>';
+
+    try {
+        // Apuntar al catálogo correspondiente de métodos de pago
+        const respuesta = await fetchConAutenticacion('catalogos/metodopago/');
+        const datos = await respuesta.json();
+        const metodos = Array.isArray(datos) ? datos : datos.results;
+
+        metodos.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m.id;
+            option.textContent = m.Tipo || m.nombre; // Lee 'Tipo' o 'nombre' según tu backend
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error al cargar métodos de pago:', error);
+    }
+}
+//========================================= OBTENER TURNO DE CAJA ACTIVO =========================================
+async function obtenerTurnoCajaActivo() {
+    try {
+        const resp = await fetchConAutenticacion('/movimiento/caja/turno/activo/');
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        return data.id; // Retorna el id del turno de caja
+    } catch (e) {
+        console.error("Error al obtener turno activo:", e);
+        return null;
+    }
 }
 
-
-
+// Retorna la fecha actual en formato YYYY-MM-DD para inputs de tipo date
+function obtenerFechaActualFormateada() {
+    const hoy = new Date();
+    const year = hoy.getFullYear();
+    const month = String(hoy.getMonth() + 1).padStart(2, '0');
+    const day = String(hoy.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 // Abrir modal compra (crear / editar)
-window.abrirModalfactura = async function(modo, id, numFactura, clienteId, Fecha, total, condicionId, estadoId) {
-
+window.abrirModalfactura = async function(modo, id, numFactura, clienteId, Fecha, total, condicionId) {
     const tablaDetalleCompra = document.getElementById('tablaDetalleFactura');
     if (tablaDetalleCompra) tablaDetalleCompra.classList.add('visible');
 
     document.getElementById('modalTextCompra').textContent =
         modo === 'crear' ? 'Nueva Factura' : 'Editar Factura';
 
-    // 1. Primero cargamos los catálogos desde la API de forma asíncrona
+    // 1. Cargar catálogos
     await cargarOpcionesClientes();
     await cargarOpcionesCondicion();
-    await cargarOpcionesEstados();
     await cargarOpcionesDetalles();
+    await cargarOpcionesPago();
 
-    // 2. Ahora que las opciones ya existen en el HTML, asignamos los valores de forma segura
-    document.getElementById('facturaNumero').value    = numFactura  || '';
-    document.getElementById('facturaCliente').value   = clienteId   || '';
-    document.getElementById('facturaFecha').value     = Fecha       || '';
-   // document.getElementById('facturaTotal').value     = total       || '';
-    
-    // Si es modo 'crear' y tus selects tienen opciones por defecto, se quedan en blanco para que el usuario elija
+    pagosTemp = []; // Reinicia los pagos
+    redibujarTablaPagos();
+
+    // 2. Asignar Fecha y Número de Factura
+    const inputFecha = document.getElementById('facturaFecha');
+    //const inputNumero = document.getElementById('facturaNumero');
+
+    if (modo === 'crear') {
+        // Asigna la fecha de hoy automáticamente
+        inputFecha.value = obtenerFechaActualFormateada();
+        
+        // Obtiene el autoincrementable del servidor
+      //  inputNumero.value = await obtenerSiguienteNumFactura();
+    } else {
+        // Si es edición, mantiene los valores recibidos
+       // inputNumero.value = numFactura || '';
+        inputFecha.value = Fecha || '';
+    }
+
+    // Bloquear campos para evitar manipulación accidental
+    //inputNumero.readOnly = true; 
+    inputFecha.readOnly = true;
+
+    // Asignar resto de campos
+    document.getElementById('facturaCliente').value = clienteId || '';
     document.getElementById('facturaCondicion').value = condicionId || '';
-    document.getElementById('facturaEstado').value    = estadoId    || '';
-    
+    document.getElementById('facturaMetodoPago').value = '';
     FacturaID = modo === 'editar' ? id : null;
 
     document.getElementById('modalfactura').classList.add('activo');
@@ -633,26 +818,56 @@ window.abrirModalfactura = async function(modo, id, numFactura, clienteId, Fecha
 
 
 window.cerrarModalFactura = function(modalfactura) {
+    let confirmar = window.confirm('¿Seguro que quieres salirte? Se perderán los datos ingresados.');
+    if (!confirmar) return;
 
+    // 1. LIMPIAR CAMPOS DEL ENCABEZADO
+    document.getElementById('facturaNumero').value = '';
+    document.getElementById('facturaCliente').value = '';
+    document.getElementById('facturaFecha').value = '';
+    document.getElementById('facturaCondicion').value = '';
 
-  let confirmar = window.confirm(`Seguro que quieres salirte`);
-  if (!confirmar) return;
+    // 2. LIMPIAR CAMPOS DE DETALLE DE PRODUCTO
+    const selectProd = document.getElementById('facturaProducto');
+    const selectLote = document.getElementById('facturalote');
+    const inputCantidad = document.getElementById('facturaCantidad');
+    const inputPrecio = document.getElementById('facturaPrecio');
+    const stockInfo = document.getElementById('stockinfo');
 
-  document.getElementById('facturaNumero').value = '';
-  document.getElementById('facturaCliente').value = '';
-  document.getElementById('facturaFecha').value = '';
-  //document.getElementById('facturaTotal').value = '';
-  document.getElementById('facturaCondicion').value    = '';
-  document.getElementById('facturaEstado').value    =  '';
-  
-  const errorEl = document.getElementById('error');
-  if (errorEl) errorEl.textContent = '';
+    if (selectProd) selectProd.selectedIndex = 0;
+    if (selectLote) {
+        selectLote.innerHTML = '<option value="">-- Primero elija un producto --</option>';
+        selectLote.disabled = true;
+    }
+    if (inputCantidad) inputCantidad.value = '';
+    if (inputPrecio) inputPrecio.value = '';
+    if (stockInfo) stockInfo.textContent = '';
 
-  const errorProducto= document.getElementById('errorMensajeFacturaProducto');
-  if (errorProducto) errorProducto.textContent='';
-  
-  document.getElementById(modalfactura).classList.remove('activo');
-}
+    // 3. VACIAR ARREGLOS Y RESETEAR CONTADORES DE TABLAS
+    ncFacturaProductosTemp = [];
+    pagosTemp = [];
+    ncFacturaContadorFila = 0;
+    contadorPagosFila = 0;
+
+    // 4. REDIBUJAR TABLAS (Para vaciar visualmente las filas)
+    if (typeof ncRedibujarTablaDetalleFac === 'function') {
+        ncRedibujarTablaDetalleFac();
+    }
+    if (typeof redibujarTablaPagos === 'function') {
+        redibujarTablaPagos();
+    }
+
+    // 5. LIMPIAR MENSAJES DE ERROR
+    const errorEl = document.getElementById('error');
+    if (errorEl) errorEl.textContent = '';
+
+    const errorProducto = document.getElementById('errorMensajeFacturaProducto');
+    if (errorProducto) errorProducto.textContent = '';
+
+    // 6. CERRAR EL MODAL
+    const elModal = document.getElementById(modalfactura);
+    if (elModal) elModal.classList.remove('activo');
+};
 
 
 let ncFacturaProductosTemp = [];   // [ { prodId, nombre, cantidad, precio, subtotal } ]
@@ -703,147 +918,270 @@ function ncRedibujarTablaDetalleFac() {
 }
 
 window.ncAgregarFacturaProducto = function() {
-    const errorEl = document.getElementById('errorMensajeFacturaProducto');
-    errorEl.textContent = '';
-
-    // 1. Obtener los elementos y sus valores correctamente
     const selectProducto = document.getElementById('facturaProducto');
-    const prodId = selectProducto.value; // El ID seleccionado (value del option)
-    const nombreProducto = selectProducto.options[selectProducto.selectedIndex]?.text || ''; // El texto visible
-    
-    const cantidad = parseFloat(document.getElementById('facturaCantidad').value.trim());
-    const precio = parseFloat(document.getElementById('facturaPrecio').value.trim());
+    const selectLote = document.getElementById('facturalote');
+    const inputCantidad = document.getElementById('facturaCantidad');
+    const inputPrecio = document.getElementById('facturaPrecio');
 
-    // Validaciones
-    if (!prodId) {
-        errorEl.textContent = 'Selecciona un producto.';
-        return;
-    }
-    if (!cantidad || cantidad <= 0) {
-        errorEl.textContent = 'Ingresa una cantidad válida.';
-        return;
-    }
-    if (!precio || precio <= 0) {
-        errorEl.textContent = 'Ingresa un precio válido.';
+    const productoNombre = selectProducto.value;
+    const loteId = selectLote.value;
+    const cantidad = parseInt(inputCantidad.value.trim()) || 0;
+    const precio = parseFloat(inputPrecio.value) || 0;
+
+    // 1. Validación de campos requeridos
+    if (!productoNombre || !loteId) {
+        alert("Por favor, seleccione un producto y un lote válido.");
         return;
     }
 
-    // Buscar en el array temporal usando el ID del producto (prodId)
-    const yaExiste = ncFacturaProductosTemp.find(p => String(p.prodId) === String(prodId));
-    if (yaExiste) {
-        errorEl.textContent = `El producto "${nombreProducto}" ya está en la lista. Quítalo primero si quieres modificarlo.`;
+    if (cantidad <= 0) {
+        alert("Por favor, ingrese una cantidad mayor a 0.");
         return;
     }
 
-    const subtotal = cantidad * precio;
-    ncFacturaContadorFila++;
+    // 2. ADVERTENCIA DE DUPLICADO: Verificar si el lote o el producto ya existe en la tabla
+    const existeEnTabla = ncFacturaProductosTemp.some(p => p.loteId === loteId || p.nombre === productoNombre);
 
-    // Guardar las propiedades correctas en el objeto (incluyendo una clave única _key para poder borrarlo)
+    if (existeEnTabla) {
+        alert(`¡El producto "${productoNombre}" ya se encuentra agregado en la tabla! Si desea modificar la cantidad, elimine la fila actual e ingréselo nuevamente.`);
+        return;
+    }
+
+    // 3. VALIDACIÓN DE STOCK MÁXIMO DISPONIBLE
+    const optionLote = selectLote.selectedOptions[0];
+    const stockDisponible = parseInt(optionLote.dataset.stock) || 0;
+
+    if (cantidad > stockDisponible) {
+        alert(`¡Stock insuficiente! El lote seleccionado solo cuenta con ${stockDisponible} unidades disponibles.`);
+        return;
+    }
+
+    // 4. Agregar al arreglo temporal de productos
     ncFacturaProductosTemp.push({
-        _key: ncFacturaContadorFila,
-        prodId: prodId,
-        nombreProducto: nombreProducto,
+        _key: Date.now(), // Identificador único para el render de la fila
+        loteId: loteId,
+        nombre: productoNombre,
         cantidad: cantidad,
         precio: precio,
-        subtotal: subtotal
+        subtotal: cantidad * precio
     });
 
-    // Limpiar campos usando los IDs reales de tu HTML
-    document.getElementById('facturaProducto').value = '';
-    document.getElementById('facturaCantidad').value = '';
-    document.getElementById('facturaPrecio').value = '';
+    // 5. Limpiar los campos del formulario de entrada
+    inputCantidad.value = '0';
+    selectLote.selectedIndex = 0;
+    selectProducto.selectedIndex = 0;
+    selectLote.disabled = true;
+    inputPrecio.value = '';
 
-    // Foco de vuelta al select de productos
-    document.getElementById('facturaProducto').focus();
-
-    // Redibujar la tabla
-    ncRedibujarTablaDetalleFac();
+    // 6. Redibujar la tabla de productos y actualizar totales de la factura
+    ncRedibujarTablaDetalleFac(); 
 };
 
 window.ncQuitarProductoFactura = function(key) {
     ncFacturaProductosTemp = ncFacturaProductosTemp.filter(p => p._key !== key);
     ncRedibujarTablaDetalleFac();
 };
+// llenar de forma temporal los pagos en la interfaz del modal derecho
+// Arreglo temporal para los pagos acumulados
+let pagosTemp = []; 
+let contadorPagosFila = 0;
+
+/** Recalcula el total pagado y el cambio/vuelto */
+function actualizarTotalesPago() {
+    // 1. Obtener el total a cobrar de la factura (se calcula desde los productos cargados)
+    const totalCobrar = ncFacturaProductosTemp.reduce((acc, p) => acc + p.subtotal, 0);
+    
+    // 2. Sumar el total abonado en la tabla de pagos
+    const totalPagado = pagosTemp.reduce((acc, p) => acc + p.monto, 0);
+    
+    // 3. Calcular el vuelto/cambio
+    const cambio = totalPagado - totalCobrar;
+
+    // Actualizar elementos en la interfaz
+    const elTotalPagado = document.getElementById('facMetodoTotal');
+    if (elTotalPagado) elTotalPagado.textContent = ncMoneda(totalPagado);
+
+    const elCambio = document.getElementById('facturaCambio');
+    if (elCambio) {
+        // Muestra el cambio en verde si es mayor a 0, de lo contrario C$ 0.00
+        //elCambio.textContent = ncMoneda(cambio > 0 ? cambio : 0);
+        elCambio.value = ncMoneda(cambio > 0 ? cambio : 0);
+    }
+}
+
+/** Redibuja la tabla temporal de pagos */
+function redibujarTablaPagos() {
+    const tbody = document.getElementById('bodyTablaFacturaPagos'); // id de tu <tbody> en el modal de cobro
+    if (!tbody) return;
+
+    if (pagosTemp.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No se han agregado pagos</td></tr>';
+        actualizarTotalesPago();
+        return;
+    }
+
+    let filas = '';
+    const fechaHoy = obtenerFechaActualFormateada();
+
+    pagosTemp.forEach((p, idx) => {
+        filas += `<tr>
+            <td>${idx + 1}</td>
+            <td>${p.nombreMetodo}</td>
+            <td>${ncMoneda(p.monto)}</td>
+            <td>${fechaHoy}</td>
+            <td>
+                <button type="button" class="btn-accion btn-eliminar" onclick="quitarPagoTemporal(${p._key})" title="Quitar pago">
+                    🗑
+                </button>
+            </td>
+        </tr>`;
+    });
+
+    tbody.innerHTML = filas;
+    actualizarTotalesPago();
+}
+
+/** Función llamada desde el HTML al dar clic en "+ Agregar monto" */
+window.agregarPagoTemporal = function() {
+    const selectMetodo = document.getElementById('facturaMetodoPago');
+    const inputMonto = document.getElementById('facturaMontoPago');
+
+    const metodoPagoId = selectMetodo.value;
+    const nombreMetodo = selectMetodo.options[selectMetodo.selectedIndex]?.text || '';
+    const monto = parseFloat(inputMonto.value.trim());
+
+    // Validaciones
+    if (!metodoPagoId) {
+        alert('Por favor, selecciona un método de pago.');
+        return;
+    }
+    if (isNaN(monto) || monto <= 0) {
+        alert('Por favor, ingresa un monto válido mayor a 0.');
+        return;
+    }
+
+    contadorPagosFila++;
+
+    // Guardar en el arreglo temporal
+    pagosTemp.push({
+        _key: contadorPagosFila,
+        metodoPagoId: metodoPagoId,
+        nombreMetodo: nombreMetodo,
+        monto: monto
+    });
+
+    // Limpiar campo de monto y reenfocar
+    inputMonto.value = '';
+    selectMetodo.focus();
+
+    // Redibujar la tabla
+    redibujarTablaPagos();
+};
+
+/** Quitar un pago individual de la lista */
+window.quitarPagoTemporal = function(key) {
+    pagosTemp = pagosTemp.filter(p => p._key !== key);
+    redibujarTablaPagos();
+};
 
 // ── Guardar: envía cabecera + detalles a la API ───────────────
+// Arreglo temporal local para acumular pagos en la interfaz del modal derecho
+
 
 window.guardarNuevaFactura = async function() {
-    let errorEl = document.getElementById('errorfactura'); 
-    let errorProducto= document.getElementById('errorMensajeFacturaProducto');
-    if (!errorEl) {
-        errorEl = { set textContent(val) { console.error("Error UI:", val); } };
-    }
-    errorEl.textContent = '';
+    let idtipomovimiento = 1; // 1: Venta, 2: Compra
+    let errorEl = document.getElementById('errorfactura');
+    if (errorEl) errorEl.textContent = '';
 
-    // Capturar elementos directamente
-    const numFactura   = document.getElementById('facturaNumero').value.trim();
-    const fecha        = document.getElementById('facturaFecha').value;
-    const clienteId    = document.getElementById('facturaCliente').value;
-    const condicionId  = document.getElementById('facturaCondicion').value;
-    const estadoId     = document.getElementById('facturaEstado').value;
+    const numFactura  = document.getElementById('facturaNumero').value.trim();
+    const clienteId   = document.getElementById('facturaCliente').value;
+    const condicionId = document.getElementById('facturaCondicion').value; // 1: Contado, 2: Crédito
 
-    // Validación estricta en Frontend antes de mandar el POST
-    if (!numFactura || !fecha || !clienteId || !condicionId || !estadoId) {
-        errorEl.textContent = '⚠️ Por favor, asegúrese llenar todos los campos';
+    if (!numFactura || !clienteId || !condicionId) {
+        if (errorEl) errorEl.textContent = '⚠️ Por favor, llena todos los campos principales.';
         return;
     }
 
     if (ncFacturaProductosTemp.length === 0) {
-        errorProducto.textContent = '⚠️ Agrega al menos un producto a la tabla antes de guardar.';
+        alert('⚠️ Agrega al menos un producto a la lista.');
         return;
     }
 
-    // Calcular total directamente desde la tabla temporal
-    const totalCalculado = ncFacturaProductosTemp.reduce((acc, p) => acc + p.subtotal, 0);
-    //const totalSu
+    // Obtener turno de caja obligatorio para movimientos en efectivo/digital
+    const turnoCajaId = await obtenerTurnoCajaActivo();
 
+    // Mapeo del detalle con 'loteId'
     const detallesFormateados = ncFacturaProductosTemp.map(p => ({
-        detalleProductoId: parseInt(p.prodId),
-        Cantidad: parseFloat(p.cantidad),
-        Subtotal: (p.subtotal),
+        loteId: parseInt(p.loteId, 10),
+        Cantidad: parseInt(p.cantidad)
     }));
 
+    // Construcción del Payload
     const payload = {
-        NumFactura:     parseInt(numFactura),
-        Fecha:          fecha, 
-        ClienteId:      parseInt(clienteId),
-        condicionId:    parseInt(condicionId),    
-        estadoCuentaId: parseInt(estadoId),       
-        Total:          totalCalculado.toFixed(2), 
-        detalles:       detallesFormateados
+        NumFactura: parseInt(numFactura),
+        ClienteId: parseInt(clienteId),
+        condicionId: parseInt(condicionId),
+        turnoCajaId: turnoCajaId,
+        detalles: detallesFormateados,
+        tipoMovimientoCajaId: idtipomovimiento
     };
+
+    
+
+    // Si es Venta al Contado, agregamos el listado de pagos acumulados
+    if (parseInt(condicionId) === 1) {
+        if (pagosTemp.length === 0) {
+            alert('⚠️ Debe agregar al menos un pago para finalizar la venta al contado.');
+            return;
+        }
+        payload.pagos = pagosTemp.map(p => ({
+            metodoPagoId: parseInt(p.metodoPagoId),
+            monto: parseFloat(p.monto)
+        }));
+    } 
+    // Si es Crédito, enviamos los datos correspondientes
+    else if (parseInt(condicionId) === 2) {
+        payload.datos_credito = {
+            FechaLimiteCredito: document.getElementById('facturaFechaLimite')?.value || null,
+            estadoCuentaId: 1 // Id por defecto (Pendiente/Activo)
+        };
+    }
+
+    console.log(payload)
 
     try {
         const respFactura = await fetchConAutenticacion('movimiento/factura/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
 
         const respuestaJson = await respFactura.json();
 
         if (!respFactura.ok) {
-            console.error("Detalles del Error devuelto por Django:", respuestaJson);
-            errorEl.textContent = 'Error desde el servidor: ' + JSON.stringify(respuestaJson);
+            console.error("Error devuelto por Django:", respuestaJson);
+            if (errorEl) errorEl.textContent = 'Error: ' + JSON.stringify(respuestaJson);
             return;
         }
 
-        alert(`✅ Factura N° ${numFactura} guardada con éxito por un total de C$ ${totalCalculado.toFixed(2)}`);
+        alert(`✅ Factura N° ${numFactura} procesada con éxito.`);
         
-        // Limpieza completa
+        // Reset y refresco
         ncFacturaProductosTemp = [];
-        ncRedibujarTablaDetalleFac();
+        pagosTemp = [];
         document.getElementById('modalfactura').classList.remove('activo');
         await cargarFactura();
 
     } catch (e) {
-        errorEl.textContent = 'Error crítico de comunicación con el servidor.';
         console.error(e);
+        if (errorEl) errorEl.textContent = 'Error de comunicación con el servidor.';
+
+        console.error(
+            "Error devuelto por Django:",
+            JSON.stringify(error, null, 2)
+        );
     }
 };
-
 //---------------------------------------------------------------------
 // MODULO DE CAJA
 //----------------------------------------------------------------------
@@ -861,7 +1199,7 @@ async function cargarCaja() {
   try {
     // Usamos tu función con autenticación automática.
     //fetchConAutenticacion ya concatena urlAPI internamente según el diseño previo.
-    let respuesta = await fetchConAutenticacion('movimiento/caja/');
+    let respuesta = await fetchConAutenticacion('movimiento/caja/turno');
     const dato = await respuesta.json();
 
     const Caja = Array.isArray(dato) ? dato : dato.results;
@@ -870,34 +1208,54 @@ async function cargarCaja() {
     for (let i = 0; i < Caja.length; i++) {
       let caja = Caja[i];
 
+      // esto es para que no muestre al usuario null si no hay fecha de cierre
+      let fechaCierre = caja.fecha_cierre_formateada
+
+      if (fechaCierre === null)
+        fechaCierre = "No hay fecha de cierre"
+      else
+        fechaCierre = caja.fecha_cierre_formateada
+
+
       filas += '<tr>';
       filas += '<td>'+ (i+1)+'</td>';
-      filas += '<td class="td-nombreEmp">'+caja.NumCaja+'</td>';
-      filas += '<td>'+caja.Empleado_nombre+'</td>';
+      filas += '<td class="td-nombreEmp">'+caja.num_caja_numero+'</td>';
+      filas += `<td> ${caja.Empleado_nombre}</td>`;
       filas += `<td>C$ ${caja.SaldoInicial}</td>`;
-      filas += `<td>C$ ${caja.Egresos}</td>`;
-      filas += `<td>C$ ${caja.Din_efectivo}</td>`;
-      filas += `<td>C$ ${caja.Din_digital}</td>`;
-      filas += `<td>C$ ${caja.SaldoFinal}</td>`;
+      filas += `<td>C$ ${caja.Egresos ?? '-'}</td>`;
+      filas += `<td>C$ ${caja.Din_efectivo ?? '-'}</td>`;
+      filas += `<td>C$ ${caja.Din_digital ?? '-'}</td>`;
+      filas += `<td>C$ ${caja.SaldoFinal ?? '-'}</td>`;
       filas += '<td>'+caja.fecha_incio_formateada+'</td>'
-      filas += '<td>'+caja.fecha_cierre_formateada+'</td>'
+      filas += '<td>'+fechaCierre+'</td>'
       filas += '<td class="td-acciones">';
 
-      filas += `<button class="btn-accion" style="background:rgba(6,182,212,0.15);color:#0e7490;border:1px solid rgba(6,182,212,0.4);"
-                  ">
-                  🔍 Detalles
-                </button>`;
-      filas += '</td>';
+      filas += `<button
+                          type="button"
+                          class="btn-accion"
+                          style="
+                              background: rgba(6,182,212,0.15);
+                              color: #0e7490;
+                              border: 1px solid rgba(6,182,212,0.4);
+                          "
+                          data-id="${escaparHTML(caja.id)}"
+                          data-numero="${escaparHTML(caja.num_caja_numero)}"
+                          data-empleado="${escaparHTML(caja.Empleado_nombre)}"
+                          data-apertura="${escaparHTML(caja.fecha_incio_formateada)}"
+                          data-abierto="${caja.abierto === true}"
+                          onclick="detalleMovimientoCaja(this)">
+                          🔍 Detalles
+                  </button>`
+      filas += `</td>`;
       
-
       // aciones
       filas += '<td class="td-acciones">';
       filas += '<button class="btn-accion btn-editar" '
-              + `onclick="abrirModalfactura('editar')">`
-              + '✏ Editar'              
+              + `onclick="abrirModalcaja('editar',${caja.id},'${caja.NumCajaid}','${caja.EmpleadoId}','${caja.SaldoInicial}','${caja.FechaApertura}')">`
+              + '✏ Editar'
               + '</button>';
       filas += '<button class="btn-accion btn-eliminar" '
-              + `onclick="eliminarFactura()">`
+              + `onclick="eliminarCaja(${caja.id},'${caja.num_caja_numero}','${caja.Empleado_nombre}')">`
               + '🗑 Eliminar'              
               + '</button>';
       filas += ' </td>';
@@ -915,7 +1273,437 @@ async function cargarCaja() {
     console.error('Error en cargarFactura:', error); 
   }
 }
+// =================Cargar numero de caja========================
+async function cargarOpcionesNCcaja () {
+  var select = document.getElementById('SelectNumCaja');
 
+  // Limpiar las opciones anteriores
+  select.innerHTML = '<option value="">-- Seleccione el número de caja --</option>';
+
+  try {
+    var respuesta    = await fetchConAutenticacion('movimiento/caja/');
+    var datos        = await respuesta.json();
+    var numcaja = Array.isArray(datos) ? datos : datos.results;
+
+    // Crear un <option> por cada departamento.
+    // value = id (lo que se envía al API como FK)
+    // textContent = nombre (lo que ve el usuario)
+
+    //console.log('datos recibidos de la api: ', condicion);
+    
+    
+    for (var i = 0; i < numcaja.length; i++) {
+      var cajaNum     = numcaja[i];
+      var option = document.createElement('option');
+      option.value       = cajaNum.id;     // ← esto es lo que se envía como  en el body
+      option.textContent =`${cajaNum.NumCaja}`; // ← esto es lo que ve el usuario
+      select.appendChild(option);
+    }
+
+  } catch (error) {
+    console.error('No se pudieron cargar los departamentos para el select:', error);
+  }
+}
+
+// =================Cargar numero de caja========================
+async function cargarOpcionesEmpleado () {
+  var select = document.getElementById('SelectEmpleado');
+
+  // Limpiar las opciones anteriores
+  select.innerHTML = '<option value="">-- Seleccione --</option>';
+
+  try {
+    var respuesta    = await fetchConAutenticacion('catalogos/empleados');
+    var datos        = await respuesta.json();
+    var empleados = Array.isArray(datos) ? datos : datos.results;
+
+    // Crear un <option> por cada departamento.
+    // value = id (lo que se envía al API como FK)
+    // textContent = nombre (lo que ve el usuario)
+
+    //console.log('datos recibidos de la api: ', condicion);
+    
+    
+    for (var i = 0; i < empleados.length; i++) {
+      var Empleados     = empleados[i];
+      var option = document.createElement('option');
+      option.value       = Empleados.id;     // ← esto es lo que se envía como  en el body
+      option.textContent =`${`${Empleados.Nombres}` + `${Empleados.Apellidos}`}`; // ← esto es lo que ve el usuario
+      select.appendChild(option);
+    }
+
+  } catch (error) {
+    console.error('No se pudieron cargar los departamentos para el select:', error);
+  }
+}
+
+// ------------------------------------------
+// Abrir modal (crear o editar)
+// ------------------------------------------
+window.abrirModalcaja = async function(
+    modo,
+    id = null,
+    NumCajaId = '',
+    Empleado = '',
+    SaldoInicial = '',
+    fecha_incio_formateada = ''
+) {
+    document.getElementById('modalTextCaja').textContent =
+        modo === 'crear'
+            ? 'Asignar turno de caja'
+            : 'Editar turno de caja';
+
+    CajaID = modo === 'editar' ? id : null;
+
+    document.getElementById('errorCaja').textContent = '';
+
+    // Primero cargar las opciones
+    await cargarOpcionesNCcaja();
+    await cargarOpcionesEmpleado();
+
+    // Después asignar los valores
+    document.getElementById('SelectNumCaja').value = NumCajaId || '';
+    document.getElementById('SelectEmpleado').value = Empleado || '';
+    document.getElementById('CajaPrecioInicial').value = SaldoInicial || '';
+
+    const fechaCajaInicio = document.getElementById('FechaInicioCaja');
+
+    if (modo === 'crear') {
+        fechaCajaInicio.value = obtenerFechaActualFormateada();
+    } else {
+        fechaCajaInicio.value = convertirFechaParaInputDate(fecha_incio_formateada);
+    }
+
+    console.log('Número caja:', NumCajaId);
+    console.log('Empleado:', Empleado);
+    console.log('Saldo inicial:', SaldoInicial);
+    console.log('Fecha inicio:', fechaCajaInicio.value);
+
+    fechaCajaInicio.readOnly = true;
+
+    document.getElementById('modalCaja').classList.add('activo');
+};
+
+function convertirFechaParaInputDate(fecha) {
+    if (!fecha) return '';
+
+    const fechaObj = new Date(fecha);
+
+    if (isNaN(fechaObj.getTime())) {
+        console.error('Fecha inválida:', fecha);
+        return '';
+    }
+
+    const year = fechaObj.getFullYear();
+    const month = String(fechaObj.getMonth() + 1).padStart(2, '0');
+    const day = String(fechaObj.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+//=========================CERRAR MODAL DE CAJA=====================================
+window.cerrarModalCaja = function(idModal) {
+  document.getElementById('SelectNumCaja').value = '';
+  document.getElementById('SelectEmpleado').value = '';
+  document.getElementById('CajaPrecioInicial').value = '';
+  document.getElementById('FechaInicioCaja').value = '';
+
+  const errorEl = document.getElementById('errorCaja');
+  if (errorEl) errorEl.textContent = '';
+  
+  document.getElementById(idModal).classList.remove('activo');
+}
+
+// ------------------------------------------
+// Guardar Caja(crear o editar)
+// ------------------------------------------
+window.guardarCaja = async function() {
+  const errorCaja      = document.getElementById('errorCaja');
+  const NumCaja    = document.getElementById('SelectNumCaja').value;
+  const Empleado     = document.getElementById('SelectEmpleado').value;
+  const SaldoInicial = document.getElementById('CajaPrecioInicial').value.trim();
+  const FechaInicio  = document.getElementById('FechaInicioCaja').value;
+
+  // Validación básica
+  if (!NumCaja || !Empleado || !SaldoInicial || !FechaInicio) {
+    errorCaja.textContent = 'Por favor, completa todos los campos.';
+    return;
+  }
+
+  let body = JSON.stringify({ NumCajaid: NumCaja, EmpleadoId: Empleado, SaldoInicial: SaldoInicial, FechaApertura: FechaInicio });
+
+  console.log(CajaID)
+  try {
+    let respuesta;
+
+    if (CajaID) {
+      // EDITAR — PATCH
+      respuesta = await fetchConAutenticacion(`movimiento/caja/turno/${CajaID}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:body,
+      });
+    } else {
+      // CREAR — POST
+      respuesta = await fetchConAutenticacion('movimiento/caja/turno/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body,
+      });
+    }
+
+    if (respuesta.ok) {
+      cerrarModalCaja('modalCaja');
+      cargarCaja();
+    } else {
+      const err = await respuesta.json();
+      errorCaja.textContent = 'Error: ' + JSON.stringify(err);
+    }
+  } catch (error) {
+    errorCaja.textContent = 'Error de conexión con la API.';
+    console.error('Error en caja:', error);
+  }
+};
+
+// BORRAR Caja
+window.eliminarCaja = async function(id, numCaja, empleado) {
+  console.log(numCaja + empleado,id)
+  let confirmar = window.confirm(`Seguro quieres eliminar el registro de la caja numero ${numCaja} del empleado ${empleado}`);
+  if (!confirmar) return;
+  
+
+  try {
+    let url = `movimiento/caja/turno/${id}/`;
+    let respuesta = await fetchConAutenticacion(url, {
+      method: 'DELETE'
+    });
+
+    if (respuesta.status === 204 || respuesta.ok) {
+      cargarCaja();
+    } else {
+      alert('No se pudo eliminar. Código: ' + respuesta.status);
+    }
+  } catch (error) {
+    alert('Error de conexión con la API.');
+    console.error('Error en eliminarEmpleado:', error);
+  }
+}
+
+
+/* ==========================================
+   UTILIDADES
+========================================== */
+
+function escaparHTML(valor) {
+    return String(valor ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function formatearFecha(fecha) {
+    if (!fecha) return "—";
+
+    const fechaObj = new Date(fecha);
+
+    if (Number.isNaN(fechaObj.getTime())) {
+        return escaparHTML(fecha);
+    }
+
+    return fechaObj.toLocaleString("es-NI", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+    });
+}
+
+function formatearMonto(monto) {
+    const numero = Number(monto);
+
+    if (!Number.isFinite(numero)) return "C$ 0.00";
+
+    return "C$ " + numero.toLocaleString("es-NI", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+
+/* ==========================================
+   ABRIR MODAL Y CONSULTAR MOVIMIENTOS
+========================================== */
+
+window.detalleMovimientoCaja = async function (boton) {
+    const modal = document.getElementById("modalMomientoCaja");
+    const tbody = document.getElementById("bodyMovimientoCaja");
+    const cargando = document.getElementById("cargandoMovimientos");
+    const contenedor = document.getElementById(
+        "contenedorTablaMovimientos"
+    );
+
+    // El botón contiene los datos del turno seleccionado.
+    const id = boton.dataset.id;
+    const numeroCaja = boton.dataset.numero;
+    const empleado = boton.dataset.empleado;
+    const fechaApertura = boton.dataset.apertura;
+    const abierto = boton.dataset.abierto === "true";
+
+    if (!id) {
+        console.error("No se recibió el ID del turno de caja.");
+        return;
+    }
+
+    // Mostrar los datos generales.
+    document.getElementById("detalleNumeroCaja").textContent =
+        numeroCaja || "—";
+
+    document.getElementById("detalleEmpleado").textContent =
+        empleado || "—";
+
+    document.getElementById("detalleFechaApertura").textContent =
+        fechaApertura || "—";
+
+    const estadoTurno = document.getElementById("detalleEstadoTurno");
+
+    estadoTurno.textContent = abierto ? "Abierto" : "Cerrado";
+    estadoTurno.className = abierto
+        ? "estado-abierto"
+        : "estado-cerrado";
+
+    // Preparar el historial.
+    tbody.innerHTML = "";
+    contenedor.hidden = true;
+    cargando.style.display = "block";
+    cargando.textContent = "Cargando movimientos...";
+
+    // Abrir el modal antes de realizar la consulta.
+    modal.classList.add("activo");
+
+    try {
+        const respuesta = await fetchConAutenticacion(
+            `movimiento/caja/movimientocaja/turno/${encodeURIComponent(id)}/`
+        );
+
+        if (!respuesta.ok) {
+            const detalleError = await respuesta.text();
+
+            throw new Error(
+                `Error HTTP ${respuesta.status}: ${detalleError}`
+            );
+        }
+
+        const dato = await respuesta.json();
+
+        const movimientos = Array.isArray(dato)
+            ? dato
+            : Array.isArray(dato.results)
+                ? dato.results
+                : [];
+
+        if (movimientos.length === 0) {
+            cargando.textContent =
+                "Este turno todavía no tiene movimientos registrados.";
+            return;
+        }
+
+        let filas = "";
+
+        for (const movimiento of movimientos) {
+            const tipo = movimiento.tipo_movimiento_nombre || "Sin tipo";
+
+            // Determinar si el movimiento es ingreso o egreso.
+            const tipoNormalizado = tipo.trim().toLowerCase();
+
+            const esIngreso = tipoNormalizado === "ingreso";
+            const esEgreso = tipoNormalizado === "egreso";
+
+            let claseTipo = "";
+
+            if (esIngreso) claseTipo = "tipo-ingreso";
+            if (esEgreso) claseTipo = "tipo-egreso";
+
+            // El serializador construye este texto en el servidor.
+            const documento =
+                movimiento.documento_relacionado ||
+                movimiento.descripcion ||
+                "Sin documento asociado";
+
+            filas += `
+                <tr>
+                    <td>
+                        ${escaparHTML(
+                            movimiento.fecha_incio_formateada ||
+                            movimiento.fecha ||
+                            "—"
+                        )}
+                    </td>
+
+                    <td>
+                        <span class="${claseTipo}">
+                            ${escaparHTML(tipo)}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${escaparHTML(documento)}
+                    </td>
+
+                    <td class="monto-movimiento">
+                        ${formatearMonto(movimiento.monto)}
+                    </td>
+                </tr>
+            `;
+        }
+
+        tbody.innerHTML = filas;
+
+        cargando.style.display = "none";
+        contenedor.hidden = false;
+
+    } catch (error) {
+        console.error(
+            "Error al cargar los movimientos de caja:",
+            error
+        );
+
+        cargando.style.display = "block";
+        cargando.textContent =
+            "No se pudieron cargar los movimientos. Intenta nuevamente.";
+    }
+};
+
+
+/* ==========================================
+   CERRAR MODAL
+========================================== */
+
+window.cerrarModalMovimientoCaja = function () {
+    document
+        .getElementById("modalMomientoCaja")
+        .classList.remove("activo");
+};
+
+
+// Cerrar al hacer clic fuera del contenido.
+document
+    .getElementById("modalMomientoCaja")
+    .addEventListener("click", function (evento) {
+        if (evento.target === this) {
+            cerrarModalMovimientoCaja();
+        }
+    });
+
+
+// Cerrar con Escape.
+document.addEventListener("keydown", function (evento) {
+    if (evento.key === "Escape") {
+        cerrarModalMovimientoCaja();
+    }
+});
 //------------------------------------------------
 // MODULO DE COMPRA
 //------------------------------------------------
@@ -947,11 +1735,11 @@ export async function cargarCompras() {
       filas += '<tr>';
       filas += `<td>${i + 1}</td>`;
       filas += `<td>${c.NumCompra}</td>`;
-      filas += `<td>${c.proveedor_nombre ?? '-'}</td>`;
+      filas += `<td>${c.Proveedor_nombre ?? '-'}</td>`;
       filas += `<td>${fecha}</td>`;
       filas += `<td>C$ ${Number(c.Total).toLocaleString('es-NI')}</td>`;
-      filas += `<td>${c.condicion_descripcion ?? '-'}</td>`;
-      filas += `<td>${c.estado_cuenta_descripcion ?? '-'}</td>`;
+      filas += `<td>${c.CondicionPago_nombre ?? '-'}</td>`;
+     // filas += `<td>${c.estado_cuenta_descripcion ?? '-'}</td>`;
 
       // Columna: Detalle de compra
       filas += '<td class="td-acciones">';
@@ -1449,9 +2237,9 @@ export async function cargarInventario() {
 
       filas += '<tr>';
       filas += `<td>${i + 1}</td>`;
-      filas += `<td>${reg.nombreProducto ?? '—'}| marca: ${reg.nombreMarca }| moto: ${reg.nombreMoto}</td>`;
+      filas += `<td>${reg.detalle_producto ?? '—'}</td>`;
       filas += `<td>${reg.Cantidad}</td>`;
-      filas += `<td>C$${parseFloat(reg.precioCompra).toFixed(2)}</td>`;
+      filas += `<td>C$${parseFloat(reg.precioCosto).toFixed(2)}</td>`;
       filas += `<td>C$${parseFloat(reg.PrecioVenta).toFixed(2)}</td>`;
       filas += `<td>${fecha}</td>`;
       filas += '<td class="td-acciones">';
@@ -1526,7 +2314,7 @@ window.guardarInventario = async function() {
   const payload = {
     detalleProductoId: parseInt(detalleId),
     Cantidad:          parseInt(cantidad),
-    precioCompra:      parseFloat(precioCompra),
+    precioCosto:      parseFloat(precioCompra),
     PrecioVenta:       parseFloat(precioVenta),
   };
 

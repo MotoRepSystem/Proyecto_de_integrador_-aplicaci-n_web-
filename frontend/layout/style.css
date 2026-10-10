@@ -322,7 +322,7 @@ input{
   bottom: -1px;
   width:300px ;
   height: 900px;
-  border-bottom: #9fa1a49c solid 0px ;
+  border-bottom: #2876eb9c solid 0px ;
   transform: translateX(-300px);
   transition: all 0.3s ease;
 }
@@ -462,7 +462,7 @@ input{
   border-radius: 4%;
   background: rgb(208, 207, 207);
   width: 1800px;
-  height: 890px;
+  height: 1000px;
   max-width: 90vw;             /* En pantallas pequeñas no se sale */
   box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   padding: 20px;
@@ -681,3 +681,475 @@ input{
 .tarjeta-verde    .tarjeta-numero { color: black; } 
 .tarjeta-amarilla .tarjeta-numero { color: black; } 
 .tarjeta-roja     .tarjeta-numero { color: black; } 
+
+
+
+/* ===== FACTURA ===========*/
+.contenedor-detalle-body{
+   padding: 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+}
+.modal-header-titulo{
+  padding: 20px 28px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+}
+
+.modal-body-detalle-card{
+  background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+.modal-formulario-form{
+  display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+}
+
+
+.form-group-1 {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group-1.full-width {
+    grid-column: span 2;
+}
+
+.labelGrupo {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #0f172a;
+    background-color: #fcfaf8;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.linput:focus, select:focus {
+    border-color: #2563eb;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+input[readonly] {
+    background-color: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.btn-1 {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+/* Tabla de Productos */
+.table-section {
+    grid-column: span 2;
+}
+
+.table-wrapper {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.tabla-detalle {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        .th-contenido {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            text-transform: uppercase;
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .tr-campos {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .tr-campos:last-child td {
+            border-bottom: none;
+        }
+.tr-campos-total{
+  background-color: #b3c1c4;
+}
+.tabla-detalle tbody td{
+  padding: 12px 20px;
+  font-size: 17px;
+  color: black;
+  border-bottom:4px solid  #b3b3b3;
+  max-width: 260px;
+  white-space: nowrap;  
+  overflow: hidden;
+  text-overflow:ellipsis ;
+}
+
+/* La última fila no tiene línea separadora abajo */
+.tabla-detalle tbody tr:last-child td {
+  border-bottom: none; /* Quita el borde de la última fila */
+}
+
+.tabla-detalle tbody tr:hover td{
+  background: #bdbfc2;
+  transition: 0.5s;
+  /*font-size: 19px ;*/
+  color: blue;
+}
+
+
+
+
+
+
+
+/* Panel Deslizante de Pago (Drawer) */
+        .payment-drawer {
+            position: absolute;
+            top: 0;
+            right: -100%;
+            width: 820px;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: -10px 0 25px rgba(0, 0, 0, 0.15);
+            transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .payment-drawer.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 20px;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-body {
+            padding: 24px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: flex-start;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .drawer-footer {
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .method-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #475569;
+            transition: all 0.2s;
+        }
+
+        .method-card.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+
+
+
+/* Fondo del modal */
+#modalMomientoCaja.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.65);
+}
+
+#modalMomientoCaja.modal-overlay.activo {
+    display: flex;
+}
+
+/* Contenedor principal */
+#modalMomientoCaja .modal_detalles {
+    width: min(1100px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    color: #17212b;
+}
+
+/* Encabezado */
+#modalMomientoCaja .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 26px;
+}
+
+#modalMomientoCaja .modal-header h2 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+#modalMomientoCaja .btn-cerrar-modal {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 28px;
+    cursor: pointer;
+    color: #64748b;
+}
+
+#modalMomientoCaja .btn-cerrar-modal:hover {
+    background: #f1f5f9;
+    color: #111827;
+}
+
+/* Tarjetas de información */
+#modalMomientoCaja .resumen-turno {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+#modalMomientoCaja .resumen-card {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid #dce4ec;
+    border-radius: 10px;
+    background: #f4f7fa;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#modalMomientoCaja .resumen-card span {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+#modalMomientoCaja .resumen-card strong {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+}
+
+#modalMomientoCaja .estado-abierto {
+    color: #15803d;
+}
+
+#modalMomientoCaja .estado-cerrado {
+    color: #b91c1c;
+}
+
+/* Separador e historial */
+#modalMomientoCaja .separador-modal {
+    border-top: 1px solid #e2e8f0;
+    margin: 26px 0;
+}
+
+#modalMomientoCaja .historial-movimientos h3 {
+    margin: 0 0 18px;
+    font-size: 17px;
+}
+
+#modalMomientoCaja .contenedor-tabla-movimientos {
+    width: 100%;
+    overflow-x: auto;
+}
+
+#modalMomientoCaja .tabla-movimientos {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 620px;
+}
+
+#modalMomientoCaja .tabla-movimientos th {
+    padding: 12px 10px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+#modalMomientoCaja .tabla-movimientos td {
+    padding: 15px 10px;
+    border-bottom: 1px solid #edf0f3;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+#modalMomientoCaja .tabla-movimientos tbody tr:hover {
+    background: #f8fafc;
+}
+
+#modalMomientoCaja .tabla-movimientos tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#modalMomientoCaja .columna-monto {
+    text-align: right !important;
+}
+
+#modalMomientoCaja .monto-movimiento {
+    text-align: right;
+    white-space: nowrap;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+#modalMomientoCaja .tipo-ingreso {
+    color: #15803d;
+    font-weight: 600;
+}
+
+#modalMomientoCaja .tipo-egreso {
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+#modalMomientoCaja .estado-movimientos {
+    color: #64748b;
+    padding: 16px 0;
+    font-size: 14px;
+}
+
+#modalMomientoCaja .class-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+#modalMomientoCaja .btn-cerrar-final {
+    min-width: 180px;
+    padding: 12px 24px;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111827;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#modalMomientoCaja .btn-cerrar-final:hover {
+    background: #fef2f2;
+}
+
+/* Diseño adaptable */
+@media (max-width: 850px) {
+    #modalMomientoCaja .resumen-turno {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    #modalMomientoCaja.modal-overlay {
+        padding: 10px;
+    }
+
+    #modalMomientoCaja .modal_detalles {
+        padding: 16px;
+        max-height: 95vh;
+    }
+
+    #modalMomientoCaja .resumen-turno {
+        grid-template-columns: 1fr;
+    }
+
+    #modalMomientoCaja .modal-header h2 {
+        font-size: 18px;
+    }
+
+    #modalMomientoCaja .btn-cerrar-final {
+        width: 100%;
+    }
+}
