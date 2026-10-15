@@ -56,4 +56,7 @@ urlpatterns = [
 
     # Ventas
     path('dashboard/',include('apps.dashboard.urls')),
+
+    # Ventas
+    path('api/',include('apps.incidencias.urls')),
 ]

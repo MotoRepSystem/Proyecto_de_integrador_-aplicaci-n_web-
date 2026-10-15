@@ -45,6 +45,10 @@
                     <span class="nav-icono">👨‍💼</span>
                     <span>Empleados</span>
                 </a>
+                <a href="#" class="nav-link" data-section="incidencia">
+                    <span class="nav-icono">⚠</span>
+                    <span>Incidencias</span>
+                </a>
             </nav>
             <button id="btnCerrarSesion" class="btn-cerrarSesion">Cerrar Sesión</button>
         </aside>
@@ -178,7 +182,7 @@
                                 <th>Fecha</th>
                                 <th>Total</th>
                                 <th>Condicion</th>
-                                <th>Estado</th>
+                                
                                 <th>Detalle de factura</th>
                                 <th>Acciones</th>
 
@@ -330,6 +334,375 @@
                     </table>
 
                 </section>
+
+                
+                
+                <section id="incidencia" class="seccion">
+                    <div class="incidencia-contenedor">
+
+                        <!-- Encabezado -->
+                        <div class="incidencia-encabezado">
+                            <div>
+                                <h2>Registrar incidencia</h2>
+                                <p>
+                                    Registra y documenta los problemas que se presentan
+                                    durante las operaciones de MotoRep.
+                                </p>
+                            </div>
+
+                            <span class="incidencia-etiqueta">
+                                <ion-icon name="alert-circle-outline"></ion-icon>
+                                Nueva incidencia
+                            </span>
+                        </div>
+
+                        <form id="formIncidencia" novalidate>
+
+                            <!-- Información general -->
+                            <fieldset class="incidencia-bloque">
+                                <legend>
+                                    <ion-icon name="information-circle-outline"></ion-icon>
+                                    Información general
+                                </legend>
+
+                                <div class="incidencia-grid">
+
+                                    <div class="incidencia-campo">
+                                        <label for="incTipo">Tipo de incidencia *</label>
+                                        <select id="incTipo" required>
+                                            <option value="">Seleccione el tipo</option>
+                                            <option value="Producto">Producto</option>
+                                            <option value="Venta">Venta</option>
+                                            <option value="Caja">Caja</option>
+                                            <option value="Compra">Compra</option>
+                                            <option value="Inventario">Inventario</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="incidencia-campo">
+                                        <label for="incOrigen">Origen del problema *</label>
+                                        <select id="incOrigen" required>
+                                            <option value="">Seleccione el origen</option>
+                                            <option value="cliente">Cliente</option>
+                                            <option value="empleado">Empleado</option>
+                                            <option value="proveedor">Proveedor</option>
+                                            <option value="interno">Interno</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Referencia relacionada -->
+                                    <div
+                                        class="incidencia-campo"
+                                        id="incReferenciaGrupo"
+                                        hidden
+                                    >
+                                        <label for="incReferencia" id="incReferenciaLabel">
+                                            Seleccionar referencia
+                                        </label>
+
+                                        <!-- Selector para cliente, empleado o proveedor -->
+                                        <select id="incReferencia" disabled>
+                                            <option value="">
+                                                Seleccione primero el origen
+                                            </option>
+                                        </select>
+
+                                        <!-- Referencia escrita manualmente para origen interno -->
+                                        <input
+                                            type="text"
+                                            id="incReferenciaTexto"
+                                            maxlength="150"
+                                            placeholder="Escribe una referencia (opcional)"
+                                            hidden
+                                            disabled
+                                        >
+
+                                        <small id="incReferenciaAyuda">
+                                            Selecciona el registro relacionado con la incidencia.
+                                        </small>
+                                    </div>
+
+                                    <div class="incidencia-campo">
+                                        <label for="incFecha">Fecha de registro</label>
+                                        <input
+                                            type="datetime-local"
+                                            id="incFecha"
+                                            readonly
+                                        >
+                                        <small>
+                                            Se establece automáticamente en pantalla.
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </fieldset>
+
+                            <!-- Detalle del problema -->
+                            <fieldset class="incidencia-bloque">
+                                <legend>
+                                    <ion-icon name="document-text-outline"></ion-icon>
+                                    Detalle del problema
+                                </legend>
+
+                                <div class="incidencia-grid">
+
+                                    <div class="incidencia-campo">
+                                        <label for="incCategoria">
+                                            Categoría del problema *
+                                        </label>
+
+                                        <select id="incCategoria" required>
+                                            <option value="">Seleccione una categoría</option>
+
+                                            <!-- Ajusta true/false según las reglas del negocio -->
+                                            <option
+                                                value="Producto defectuoso"
+                                                data-requiere-monto="false"
+                                            >
+                                                Producto defectuoso
+                                            </option>
+
+                                            <option
+                                                value="Producto incorrecto"
+                                                data-requiere-monto="false"
+                                            >
+                                                Producto incorrecto
+                                            </option>
+
+                                            <option
+                                                value="Error de facturación"
+                                                data-requiere-monto="true"
+                                            >
+                                                Error de facturación
+                                            </option>
+
+                                            <option
+                                                value="Diferencia de caja"
+                                                data-requiere-monto="true"
+                                            >
+                                                Diferencia de caja
+                                            </option>
+
+                                            <option
+                                                value="Faltante de inventario"
+                                                data-requiere-monto="false"
+                                            >
+                                                Faltante de inventario
+                                            </option>
+
+                                            <option
+                                                value="Otro"
+                                                data-requiere-monto="false"
+                                            >
+                                                Otro
+                                            </option>
+                                        </select>
+
+                                        <small>
+                                            El monto será obligatorio según la categoría seleccionada.
+                                        </small>
+                                    </div>
+
+                                    <div class="incidencia-campo">
+                                        <label for="incMonto">
+                                            Monto involucrado (C$)
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            id="incMonto"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            inputmode="decimal"
+                                        >
+
+                                        <small>
+                                            Introduce un monto no negativo cuando corresponda.
+                                        </small>
+                                    </div>
+
+                                    <div class="incidencia-campo incidencia-campo-completo">
+                                        <label for="incDescripcion">
+                                            Descripción de la incidencia *
+                                        </label>
+
+                                        <textarea
+                                            id="incDescripcion"
+                                            rows="5"
+                                            minlength="5"
+                                            maxlength="2000"
+                                            required
+                                            placeholder="Describe qué ocurrió, cuándo sucedió y cuáles fueron sus consecuencias..."
+                                        ></textarea>
+
+                                        <small>
+                                            Entre 5 y 2000 caracteres.
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </fieldset>
+
+                            <!-- Gestión y seguimiento -->
+                            <fieldset class="incidencia-bloque">
+                                <legend>
+                                    <ion-icon name="clipboard-outline"></ion-icon>
+                                    Gestión y seguimiento
+                                </legend>
+
+                                <div class="incidencia-grid">
+
+                                    <div class="incidencia-campo">
+                                        <label for="incEmpleado">
+                                            Usuario que registra *
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            id="incEmpleado"
+                                            readonly
+                                            required
+                                            placeholder="Cargando usuario..."
+                                        >
+
+                                        <small>
+                                            Usuario autenticado que registra la incidencia.
+                                        </small>
+                                    </div>
+
+                                    <div class="incidencia-campo">
+                                        <label for="incPrioridad">Prioridad *</label>
+
+                                        <select id="incPrioridad" required>
+                                            <option value="">Seleccione prioridad</option>
+                                            <option value="1">1 - Muy baja</option>
+                                            <option value="2">2 - Baja</option>
+                                            <option value="3">3 - Media</option>
+                                            <option value="4">4 - Alta</option>
+                                            <option value="5">5 - Crítica</option>
+                                        </select>
+                                    </div>
+
+                                </div>
+                            </fieldset>
+
+                            <!-- Evidencia opcional -->
+                            <fieldset class="incidencia-bloque">
+                                <legend>
+                                    <ion-icon name="attach-outline"></ion-icon>
+                                    Evidencia
+                                </legend>
+
+                                <div class="incidencia-campo">
+                                    <label for="incEvidencia">
+                                        Adjuntar archivo (opcional)
+                                    </label>
+
+                                    <input
+                                        type="file"
+                                        id="incEvidencia"
+                                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                                    >
+
+                                    <small>
+                                        Puedes adjuntar una imagen JPG, PNG, WEBP o un PDF.
+                                        La evidencia es opcional.
+                                    </small>
+                                </div>
+
+                                <div
+                                    id="incArchivoSeleccionado"
+                                    class="incidencia-archivo"
+                                    hidden
+                                ></div>
+                            </fieldset>
+
+                            <!-- Mensajes -->
+                            <p
+                                id="incError"
+                                class="incidencia-error"
+                                role="alert"
+                            ></p>
+
+                            <p
+                                id="incMensaje"
+                                class="incidencia-mensaje"
+                                role="status"
+                            ></p>
+
+                            <!-- Acciones -->
+                            <div class="incidencia-acciones">
+                                <button
+                                    type="reset"
+                                    class="inc-btn-secundario"
+                                >
+                                    <ion-icon name="refresh-outline"></ion-icon>
+                                    Limpiar formulario
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    class="inc-btn-principal"
+                                >
+                                    <ion-icon name="save-outline"></ion-icon>
+                                    Registrar incidencia
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </section>
+
+
+                <!-- Modal de confirmación y resultado de incidencias -->
+                <div
+                    id="incModal"
+                    class="inc-modal"
+                    hidden
+                    aria-hidden="true"
+                >
+                    <div class="inc-modal-fondo" data-cerrar-modal></div>
+
+                    <div
+                        class="inc-modal-contenido"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="incModalTitulo"
+                        aria-describedby="incModalTexto"
+                    >
+                        <div id="incModalIcono" class="inc-modal-icono">
+                            <ion-icon name="help-circle-outline"></ion-icon>
+                        </div>
+
+                        <h3 id="incModalTitulo">Confirmar registro</h3>
+
+                        <p id="incModalTexto">
+                            ¿Deseas registrar esta incidencia?
+                        </p>
+
+                        <div class="inc-modal-acciones">
+                            <button
+                                type="button"
+                                id="incModalCancelar"
+                                class="inc-modal-btn inc-modal-btn-secundario"
+                            >
+                                Cancelar
+                            </button>
+
+                            <button
+                                type="button"
+                                id="incModalAceptar"
+                                class="inc-modal-btn inc-modal-btn-principal"
+                            >
+                                Sí, registrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
             
                 <!--Modal Cliente
                 -------------------------------------------------------------------------------------------------------------------------->
@@ -461,7 +834,7 @@
 
                                         <div class="form-group-1">
                                             <label class="labelGrupo" >N° Factura</label>
-                                            <input id="facturaNumero"  type="text" value="3" readonly style="font-weight: 700; color: #2563eb;">
+                                            <input id="facturaNumero"  type="text" value=""  style="font-weight: 700; color: #2563eb;">
                                         </div>
                                         <div class="form-group-1">
                                             <label class="labelGrupo">Condición</label>
