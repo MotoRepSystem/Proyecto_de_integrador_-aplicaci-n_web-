@@ -38,6 +38,7 @@ schema_view = get_schema_view(
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
+   url="https://motorepweb-api-h3ahb3c6hgfebpa6.centralus-01.azurewebsites.net",
 )
 
 

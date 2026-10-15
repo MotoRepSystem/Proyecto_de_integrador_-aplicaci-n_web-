@@ -1,3 +1,5 @@
+//const urlAPI = "https://motorepweb-api-h3ahb3c6hgfebpa6.centralus-01.azurewebsites.net/";
+
 //const urlAPI = "http://127.0.0.1:8000/";
 
 import {
