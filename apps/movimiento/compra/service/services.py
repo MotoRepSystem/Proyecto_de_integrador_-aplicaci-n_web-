@@ -115,8 +115,9 @@ class CompraService:
             # SI ES CRÉDITO, CREAR CUENTA
 
             condicion_nombre = (condicion.descripcion.strip().lower())
+            print(condicion_nombre)
 
-            if condicion_nombre == 'credito':
+            if condicion_nombre == 'al crédito':
 
                 # No debería recibir pagos
                 if metodos_pago:
@@ -169,7 +170,7 @@ class CompraService:
 
             # COMPRA AL CONTADO
 
-            elif condicion_nombre == 'contado':
+            elif condicion_nombre == 'al contado' :
 
                 # Debe existir al menos un pago
 

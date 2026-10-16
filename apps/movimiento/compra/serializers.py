@@ -57,7 +57,7 @@ class CompraSerializer(ModelSerializer):
     CondicionPago_nombre = CharField(source='CondicionPagoId.descripcion', read_only=True)
     Fecha = DateField(required=True, input_formats=['%Y-%m-%d'], format='%Y-%m-%d')
     detalles_Compra = DetalleCompraSerializer(many=True, source='detallesCompra', required=True)
-    movimientos_pagos = PagoCompraSerializer(many=True, write_only=True, required=False, default=[])
+    movimientos_pagos = PagoCompraSerializer(many=True, write_only=True, required=False)
     FechaVencimiento = DateField(required=False, write_only=True, input_formats=['%Y-%m-%d'], format='%Y-%m-%d', allow_null=True)
 
     class Meta:

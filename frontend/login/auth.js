@@ -11,7 +11,7 @@ if (formLogin) {
 // === VARIABLES PARA EL CONTROL DE INACTIVIDAD ===
 let tiempoInactividad;
 let intervaloRefresco = null;
-const TIEMPO_LIMITE_INACTIVIDAD = 5 * 60 * 1000; // 5 minutos en milisegundos (Ajustable)
+const TIEMPO_LIMITE_INACTIVIDAD = 20 * 60 * 1000; // 5 minutos en milisegundos (Ajustable)
 
 // ==================== AUTENTICACIÓN ====================
 

@@ -20,6 +20,7 @@ from apps.seguridad.setting_apps import SEGURIDAD_SETTING_APPS
 from apps.catalogos.setting_apps import CATALOGOS_SETTING_APPS
 from apps.movimiento.setting_apps import MOVIMIENTO_SETTING_APPS
 from apps.dashboard.setting_apps import DASHBOARD_SETTING_APPS
+from apps.incidencias.setting_apps import INCIDENCIAS_SETTING_APPS
 
 from datetime import timedelta
 
@@ -48,8 +49,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'corsheaders',
     'rest_framework_simplejwt', 
-] + SEGURIDAD_SETTING_APPS + CATALOGOS_SETTING_APPS + MOVIMIENTO_SETTING_APPS + DASHBOARD_SETTING_APPS
-
+] + SEGURIDAD_SETTING_APPS + CATALOGOS_SETTING_APPS + MOVIMIENTO_SETTING_APPS + DASHBOARD_SETTING_APPS + INCIDENCIAS_SETTING_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -116,18 +116,30 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-    # 'rest_framework.permissions.IsAuthenticated',
+     'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
+}
+
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False, # Desactiva el botón de Django Login que da error
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
 }
 
 # Internationalization
