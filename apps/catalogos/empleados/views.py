@@ -16,7 +16,7 @@ class EmpleadosAPIView (APIView):
         serializer= EmpleadoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(data=serializer.data)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
    
 class EmpleadoIDAPIView(APIView):
     
