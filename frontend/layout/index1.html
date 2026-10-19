@@ -45,6 +45,10 @@
                     <span class="nav-icono">👨‍💼</span>
                     <span>Empleados</span>
                 </a>
+                <a href="#" class="nav-link" data-section="incidencia">
+                    <span class="nav-icono">⚠</span>
+                    <span>Incidencias</span>
+                </a>
             </nav>
             <button id="btnCerrarSesion" class="btn-cerrarSesion">Cerrar Sesión</button>
         </aside>
@@ -178,7 +182,7 @@
                                 <th>Fecha</th>
                                 <th>Total</th>
                                 <th>Condicion</th>
-                                <th>Estado</th>
+                                
                                 <th>Detalle de factura</th>
                                 <th>Acciones</th>
 
@@ -255,7 +259,6 @@
                                 <th>Fecha</th>
                                 <th>Total</th>
                                 <th>Condición</th>
-                                <th>Estado</th>
                                 <th>Detalle de compra</th>
                                 <th>Acciones</th>
                             </tr>
@@ -331,6 +334,375 @@
                     </table>
 
                 </section>
+
+                
+                
+                <section id="incidencia" class="seccion">
+                    <div class="incidencia-contenedor">
+
+                        <!-- Encabezado -->
+                        <div class="incidencia-encabezado">
+                            <div>
+                                <h2>Registrar incidencia</h2>
+                                <p>
+                                    Registra y documenta los problemas que se presentan
+                                    durante las operaciones de MotoRep.
+                                </p>
+                            </div>
+
+                            <span class="incidencia-etiqueta">
+                                <ion-icon name="alert-circle-outline"></ion-icon>
+                                Nueva incidencia
+                            </span>
+                        </div>
+
+                        <form id="formIncidencia" novalidate>
+
+                            <!-- Información general -->
+                            <fieldset class="incidencia-bloque">
+                                <legend>
+                                    <ion-icon name="information-circle-outline"></ion-icon>
+                                    Información general
+                                </legend>
+
+                                <div class="incidencia-grid">
+
+                                    <div class="incidencia-campo">
+                                        <label for="incTipo">Tipo de incidencia *</label>
+                                        <select id="incTipo" required>
+                                            <option value="">Seleccione el tipo</option>
+                                            <option value="Producto">Producto</option>
+                                            <option value="Venta">Venta</option>
+                                            <option value="Caja">Caja</option>
+                                            <option value="Compra">Compra</option>
+                                            <option value="Inventario">Inventario</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="incidencia-campo">
+                                        <label for="incOrigen">Origen del problema *</label>
+                                        <select id="incOrigen" required>
+                                            <option value="">Seleccione el origen</option>
+                                            <option value="cliente">Cliente</option>
+                                            <option value="empleado">Empleado</option>
+                                            <option value="proveedor">Proveedor</option>
+                                            <option value="interno">Interno</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Referencia relacionada -->
+                                    <div
+                                        class="incidencia-campo"
+                                        id="incReferenciaGrupo"
+                                        hidden
+                                    >
+                                        <label for="incReferencia" id="incReferenciaLabel">
+                                            Seleccionar referencia
+                                        </label>
+
+                                        <!-- Selector para cliente, empleado o proveedor -->
+                                        <select id="incReferencia" disabled>
+                                            <option value="">
+                                                Seleccione primero el origen
+                                            </option>
+                                        </select>
+
+                                        <!-- Referencia escrita manualmente para origen interno -->
+                                        <input
+                                            type="text"
+                                            id="incReferenciaTexto"
+                                            maxlength="150"
+                                            placeholder="Escribe una referencia (opcional)"
+                                            hidden
+                                            disabled
+                                        >
+
+                                        <small id="incReferenciaAyuda">
+                                            Selecciona el registro relacionado con la incidencia.
+                                        </small>
+                                    </div>
+
+                                    <div class="incidencia-campo">
+                                        <label for="incFecha">Fecha de registro</label>
+                                        <input
+                                            type="datetime-local"
+                                            id="incFecha"
+                                            readonly
+                                        >
+                                        <small>
+                                            Se establece automáticamente en pantalla.
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </fieldset>
+
+                            <!-- Detalle del problema -->
+                            <fieldset class="incidencia-bloque">
+                                <legend>
+                                    <ion-icon name="document-text-outline"></ion-icon>
+                                    Detalle del problema
+                                </legend>
+
+                                <div class="incidencia-grid">
+
+                                    <div class="incidencia-campo">
+                                        <label for="incCategoria">
+                                            Categoría del problema *
+                                        </label>
+
+                                        <select id="incCategoria" required>
+                                            <option value="">Seleccione una categoría</option>
+
+                                            <!-- Ajusta true/false según las reglas del negocio -->
+                                            <option
+                                                value="Producto defectuoso"
+                                                data-requiere-monto="false"
+                                            >
+                                                Producto defectuoso
+                                            </option>
+
+                                            <option
+                                                value="Producto incorrecto"
+                                                data-requiere-monto="false"
+                                            >
+                                                Producto incorrecto
+                                            </option>
+
+                                            <option
+                                                value="Error de facturación"
+                                                data-requiere-monto="true"
+                                            >
+                                                Error de facturación
+                                            </option>
+
+                                            <option
+                                                value="Diferencia de caja"
+                                                data-requiere-monto="true"
+                                            >
+                                                Diferencia de caja
+                                            </option>
+
+                                            <option
+                                                value="Faltante de inventario"
+                                                data-requiere-monto="false"
+                                            >
+                                                Faltante de inventario
+                                            </option>
+
+                                            <option
+                                                value="Otro"
+                                                data-requiere-monto="false"
+                                            >
+                                                Otro
+                                            </option>
+                                        </select>
+
+                                        <small>
+                                            El monto será obligatorio según la categoría seleccionada.
+                                        </small>
+                                    </div>
+
+                                    <div class="incidencia-campo">
+                                        <label for="incMonto">
+                                            Monto involucrado (C$)
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            id="incMonto"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            inputmode="decimal"
+                                        >
+
+                                        <small>
+                                            Introduce un monto no negativo cuando corresponda.
+                                        </small>
+                                    </div>
+
+                                    <div class="incidencia-campo incidencia-campo-completo">
+                                        <label for="incDescripcion">
+                                            Descripción de la incidencia *
+                                        </label>
+
+                                        <textarea
+                                            id="incDescripcion"
+                                            rows="5"
+                                            minlength="5"
+                                            maxlength="2000"
+                                            required
+                                            placeholder="Describe qué ocurrió, cuándo sucedió y cuáles fueron sus consecuencias..."
+                                        ></textarea>
+
+                                        <small>
+                                            Entre 5 y 2000 caracteres.
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </fieldset>
+
+                            <!-- Gestión y seguimiento -->
+                            <fieldset class="incidencia-bloque">
+                                <legend>
+                                    <ion-icon name="clipboard-outline"></ion-icon>
+                                    Gestión y seguimiento
+                                </legend>
+
+                                <div class="incidencia-grid">
+
+                                    <div class="incidencia-campo">
+                                        <label for="incEmpleado">
+                                            Usuario que registra *
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            id="incEmpleado"
+                                            readonly
+                                            required
+                                            placeholder="Cargando usuario..."
+                                        >
+
+                                        <small>
+                                            Usuario autenticado que registra la incidencia.
+                                        </small>
+                                    </div>
+
+                                    <div class="incidencia-campo">
+                                        <label for="incPrioridad">Prioridad *</label>
+
+                                        <select id="incPrioridad" required>
+                                            <option value="">Seleccione prioridad</option>
+                                            <option value="1">1 - Muy baja</option>
+                                            <option value="2">2 - Baja</option>
+                                            <option value="3">3 - Media</option>
+                                            <option value="4">4 - Alta</option>
+                                            <option value="5">5 - Crítica</option>
+                                        </select>
+                                    </div>
+
+                                </div>
+                            </fieldset>
+
+                            <!-- Evidencia opcional -->
+                            <fieldset class="incidencia-bloque">
+                                <legend>
+                                    <ion-icon name="attach-outline"></ion-icon>
+                                    Evidencia
+                                </legend>
+
+                                <div class="incidencia-campo">
+                                    <label for="incEvidencia">
+                                        Adjuntar archivo (opcional)
+                                    </label>
+
+                                    <input
+                                        type="file"
+                                        id="incEvidencia"
+                                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                                    >
+
+                                    <small>
+                                        Puedes adjuntar una imagen JPG, PNG, WEBP o un PDF.
+                                        La evidencia es opcional.
+                                    </small>
+                                </div>
+
+                                <div
+                                    id="incArchivoSeleccionado"
+                                    class="incidencia-archivo"
+                                    hidden
+                                ></div>
+                            </fieldset>
+
+                            <!-- Mensajes -->
+                            <p
+                                id="incError"
+                                class="incidencia-error"
+                                role="alert"
+                            ></p>
+
+                            <p
+                                id="incMensaje"
+                                class="incidencia-mensaje"
+                                role="status"
+                            ></p>
+
+                            <!-- Acciones -->
+                            <div class="incidencia-acciones">
+                                <button
+                                    type="reset"
+                                    class="inc-btn-secundario"
+                                >
+                                    <ion-icon name="refresh-outline"></ion-icon>
+                                    Limpiar formulario
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    class="inc-btn-principal"
+                                >
+                                    <ion-icon name="save-outline"></ion-icon>
+                                    Registrar incidencia
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </section>
+
+
+                <!-- Modal de confirmación y resultado de incidencias -->
+                <div
+                    id="incModal"
+                    class="inc-modal"
+                    hidden
+                    aria-hidden="true"
+                >
+                    <div class="inc-modal-fondo" data-cerrar-modal></div>
+
+                    <div
+                        class="inc-modal-contenido"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="incModalTitulo"
+                        aria-describedby="incModalTexto"
+                    >
+                        <div id="incModalIcono" class="inc-modal-icono">
+                            <ion-icon name="help-circle-outline"></ion-icon>
+                        </div>
+
+                        <h3 id="incModalTitulo">Confirmar registro</h3>
+
+                        <p id="incModalTexto">
+                            ¿Deseas registrar esta incidencia?
+                        </p>
+
+                        <div class="inc-modal-acciones">
+                            <button
+                                type="button"
+                                id="incModalCancelar"
+                                class="inc-modal-btn inc-modal-btn-secundario"
+                            >
+                                Cancelar
+                            </button>
+
+                            <button
+                                type="button"
+                                id="incModalAceptar"
+                                class="inc-modal-btn inc-modal-btn-principal"
+                            >
+                                Sí, registrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
             
                 <!--Modal Cliente
                 -------------------------------------------------------------------------------------------------------------------------->
@@ -443,58 +815,46 @@
                 <div class="modal-overlay" id="modalfactura">
                     <div class="modal_detalles">
                         
-                        <div class="modal-header">
+                        <div class="modal-header-titulo">
                             <h3 id="modalTextCompra">Nueva factura</h3>
                             <button class="modal-cerrar" onclick="cerrarModalFactura('modalfactura')">✕</button>
                         </div>
 
-                        <div class="contenedor-detalle">
+                        <div class="contenedor-detalle-body">
                             
-                            <div class="modal-body-detalle">
+                            <div class="modal-body-detalle-card">
 
                                 <div class="modal-compra">
-                                    <div class="text-encabezado">
-                                        <span class="texto-encabezado">Datos de factura</span>
+                                    <div class="card-title">
+                                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                        <span class="texto-encabezado">Datos principales</span>
                                     </div>
 
-                                    <div class="modal-formulario">
+                                    <div class="modal-formulario-form">
 
-                                        <div>
-                                            <div class="form-grupo">
-                                                <input type="number" required class="input-nombre" id="facturaNumero" autocomplete="off">
-                                                <label for="facturaNumero" class="lbl-nombre">
-                                                    <span class="text-nomb">N° de factura</span>
-                                                </label>
-                                            </div>
-                                            
-                                            <div class="form-grupo">
-                                                <select id="facturaCliente" class="input-nombre">
-                                                    <option value="">-- Seleccione un cliente --</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-grupo">
-                                                <input type="date" required class="input-nombre" id="facturaFecha" autocomplete="off">
-                                                <label for="facturaFecha" class="lbl-nombre lbl-activo">
-                                                    <span class="text-nomb">Fecha</span>
-                                                </label>
-                                            </div>
-                                                                                       
+                                        <div class="form-group-1">
+                                            <label class="labelGrupo" >N° Factura</label>
+                                            <input id="facturaNumero"  type="text" value=""  style="font-weight: 700; color: #2563eb;">
                                         </div>
-                                        
-                                        <div>
-                                            
-                                            <div class="form-grupo">
-                                                <select id="facturaCondicion" class="input-nombre">
-                                                    <option value="">-- Seleccione una condicion --</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-grupo">
-                                                <select id="facturaEstado" class="input-nombre">
-                                                    <option value="">-- Seleccione un estado --</option>
-                                                </select>
-                                            </div>
-                                            
-                                           
+                                        <div class="form-group-1">
+                                            <label class="labelGrupo">Condición</label>
+                                            <select id="facturaCondicion" onchange="FacturaCreditoField()">
+                                                <option value="">-- Seleccione una condicion --</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group-1 full-width">
+                                            <label class="labelGrupo">Cliente</label>
+                                            <select id="facturaCliente">
+                                                    <option value="">-- Seleccione un cliente --</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group-1">
+                                            <label class="labelGrupo">Fecha Emisión</label>
+                                            <input id="facturaFecha" type="date" readonly>
+                                        </div>
+                                        <div class="form-group-1" id="facturaFechaLimite" style="display: none;">
+                                            <label class="labelGrupo" style="color: #d97706;">Fecha Límite</label>
+                                            <input id="facturaFechaLimite" type="date" style="border-color: #fcd34d; background: #fffbeb;">
                                         </div>
                                     </div>
 
@@ -508,76 +868,90 @@
 
 
 
-                            <div class="modal-body-detalle">
+                            <div class="modal-body-detalle-card">
 
                                 <div class="modal-compra">
-                                    <div class="text-encabezado">
-                                        <span class="texto-encabezado">Agregar detalles a la factura</span>
+                                    <div class="card-title">
+                                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                        <span class="texto-encabezado">Agregar productos</span>
                                     </div>
 
-                                    <div>
+                                    <div class="modal-formulario-form">
 
-                                        <div>
-                                            <div class="form-grupo">
-                                                <select id="facturaProducto" class="input-nombre">
-                                                    <option value="">-- Seleccione un producto --</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-grupo">
-                                                <input type="number" required class="input-nombre" id="facturaCantidad" autocomplete="off">
-                                                <label for="facturaCantidad" class="lbl-nombre">
-                                                    <span class="text-nomb">Cantidad</span>
-                                                </label>
-                                            </div>
-                                            <div class="form-grupo">
-                                                <input type="number" required class="input-nombre" id="facturaPrecio" autocomplete="off">
-                                                <label for="facturaPrecio" class="lbl-nombre">
-                                                    <span class="text-nomb">Precio unitario</span>
-                                                </label>
-                                            </div>
-                                            
+                                        <!-- 1. PRODUCTO (Le quitamos 'full-width' para que comparta fila con el lote) -->
+                                        <div class="form-group-1">
+                                            <label class="labelGrupo">Producto</label>
+                                            <select id="facturaProducto" onchange="alCambiarProducto()">
+                                                <option value="">-- Seleccione un producto --</option>
+                                            </select>
                                         </div>
-                                
+
+                                        <!-- 2. NUEVO CAMPO: LOTE / DISPONIBILIDAD -->
+                                        <div class="form-group-1">
+                                            <label class="labelGrupo">Lote / Disponibilidad</label>
+                                            <select id="facturalote" onchange="alCambiarLote()" disabled>
+                                                <option value="">-- Primero elija un producto --</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- 3. CANTIDAD + TEXTO DE STOCK MÁXIMO -->
+                                        <div class="form-group-1">
+                                            <label class="labelGrupo">Cantidad</label>
+                                            <input id="facturaCantidad" type="number" placeholder="0" min="1">
+                                            <!-- Etiqueta dinámica para informar el stock del lote -->
+                                            <small id="stockInfo" style="display: block; font-size: 0.75rem; color: #0284c7; margin-top: 2px; font-weight: 600;"></small>
+                                        </div>
+
+                                        <!-- 4. PRECIO UNITARIO -->
+                                        <div class="form-group-1">
+                                            <label class="labelGrupo">
+                                                <span>Precio unitario</span>
+                                            </label>
+                                            <input type="number" required id="facturaPrecio" autocomplete="off" placeholder="0.00" readonly style="background-color: #f8fafc;">
+                                        </div>
+
+                                        <!-- BOTÓN AGREGAR -->
+                                        <div onclick="ncAgregarFacturaProducto()" class="form-group full-width" style="margin-top: 4px;">
+                                            <button class="btn btn-primary" style="width: 100%; justify-content: center;">
+                                                + Agregar Producto
+                                            </button>
+                                        </div>
+
                                     </div>
+
                                     <div class="btn-agregar-wrap">
                                         <div>
-                                            <p class="form-error"  id="errorMensajeFacturaProducto"></p>
-
+                                            <p class="form-error" id="errorMensajeFacturaProducto"></p>
                                         </div>
-                                        <button class="btn btn-primario" onclick="ncAgregarFacturaProducto()">
-                                            + Agregar
-                                        </button>
                                     </div>
-
 
                                 </div>
 
-                                
                                 <p class="form-error" id="errorCompra"></p>
                             </div>
                         </div>
-                        <div id="TablaDetalleFac" class="contenador_tabla_detalleProducto">
-                            <div class="tabla_detalleCompra_producto">
+                        <div id="TablaDetalleFac" class="table-section">
+                            <div class="table-wrapper">
 
-                                <table class="tabla" id="tablaDetalleFactura">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Nombre</th>
-                                            <th>Cantidad</th>
-                                            <th>Precio Unitario</th>
-                                            <th>Subtotal</th>
-                                            <th>Quitar</th>
+                                <table class="tabla-detalle" id="tablaDetalleFactura">
+                                    <thead >
+                                        <tr class="tr-campos">
+                                            <th class="th-contenido">#</th>
+                                            <th class="th-contenido">Nombre</th>
+                                            <th class="th-contenido">Cantidad</th>
+                                            <th class="th-contenido">Precio Unitario</th>
+                                            <th class="th-contenido">Subtotal</th>
+                                            <th class="th-contenido">Quitar</th>
                                         </tr>
                                     </thead>
                                     <tbody id="bodyDetalleCompra">
                                     </tbody>
                                     <tfoot>
-                                        <tr class="nc-total-row">
-                                            <td colspan="5" style="text-align:right; font-weight:700; padding:10px 12px; color:#fefefe;">
+                                        <tr class="tr-campos-total">
+                                            <td colspan="5" style="text-align:right; font-weight:700; padding:10px 12px; color:#000000;">
                                                 TOTAL:
                                             </td>
-                                            <td id="facTotal" style="font-weight:700; padding:10px 12px; color:#fefefe; letter-spacing: 0.5px;">
+                                            <td id="facTotal" style="font-weight:700; padding:10px 12px; color:#000000; letter-spacing: 0.5px;">
                                                 C$ 0.00
                                             </td>
                                             <td></td>
@@ -589,8 +963,89 @@
                         </div>
                         <div class="class-footer btn_detales">
                             <button class="btn btn-secundario" onclick="cerrarModalFactura('modalfactura')">🚫 Anular factura</button>
-                            <button class="btn btn-primario" onclick="guardarNuevaFactura()">💾 Guardar factura</button>
+                            <button class="btn btn-primario" onclick="openPaymentDrawer()">💾 Procesar Pago</button>
                         </div>
+
+                        <!-- Drawer Deslizante de Pago -->
+                        <div class="payment-drawer" id="paymentDrawer">
+                            <div class="drawer-header">
+                                <h3>Cobro de Factura N° 3</h3>
+                                <button class="modal-cerrar" style="color: white;" onclick="closePaymentDrawer()">X</button>
+                            </div>
+                            <div class="drawer-body">
+                                <div>
+                                    <label>Monto Total a Cobrar</label>
+                                    <div style="font-size: 1.8rem; font-weight: 700; color: #2563eb; margin-top: 4px;">
+                                        <span id="textTotalMovimentoPagoFactura">C$ 3,662.19</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group-1 full-width">
+                                    
+                                    <div>    
+                                        <label>Método de Pago</label>
+                                        <select id="facturaMetodoPago">
+                                            <option>-- Seleccione un metodo de pago --</option>
+                                            
+                                        </select>
+                                    </div>
+                                    <div class="form-group-1">
+                                        <label>Monto</label>
+                                        <input id="facturaMontoPago" type="number" placeholder="0">
+                                    </div>
+                                    
+                                    <div onclick="agregarPagoTemporal()" class="form-group full-width" style="margin-top: 4px;">
+                                        <button class="btn btn-primary" style="width: 100%; justify-content: center;">
+                                            + Agregar monto
+                                        </button>
+                                    </div>
+                                    
+                                    
+                                </div>
+
+                                <div id="TablaDetalleFac" class="table-section">
+                                    <div class="table-wrapper">
+
+                                        <table class="tabla-detalle" id="tablaDetalleFactura">
+                                            <thead >
+                                                <tr class="tr-campos">
+                                                    <th class="th-contenido">#</th>
+                                                    <th class="th-contenido">metodo de pago</th>
+                                                    <th class="th-contenido">Moto</th>
+                                                   <!--<th class="th-contenido">Fecha</th>--> 
+                                                    <th class="th-contenido">Quitar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="bodyTablaFacturaPagos">
+                                            </tbody>
+                                            <tfoot>
+                                                <tr class="tr-campos">
+                                                    <td colspan="5" style="text-align:right; font-weight:700; padding:10px 12px; color:#000000;">
+                                                        TOTAL:
+                                                    </td>
+                                                    <td id="facMetodoTotal" style="font-weight:700; padding:10px 12px; color:#000000; letter-spacing: 0.5px;">
+                                                        C$ 0.00
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Cambio / Vuelto</label>
+                                    <input class="facturaCambioText" type="text" id="facturaCambio" readonly style="background: #f0fdf4; color: #166534; font-weight: 700; font-size: 1.1rem;">
+                                </div>
+                            </div>
+                            <div class="drawer-footer">
+                                <button class="btn btn-success" style="width: 100%; justify-content: center; padding: 12px;" onclick="guardarNuevaFactura()">
+                                    ✓ Confirmar y Finalizar Factura
+                                </button>
+                            </div>
+                        </div>
+
+
                     </div>
                 </div>
              
@@ -763,10 +1218,7 @@
                         
                                     <p class="form-error" id="nc_error_compra"></p>
                                 </div>
-                                <div class="class-footer btn_detales">
-                                    <button class="btn btn-secundario" onclick="cerrarModalFactura('modalfactura')">🚫 Anular factura</button>
-                                    <button class="btn btn-primario" onclick="guardarFactura()">💾 Guardar factura</button>
-                                </div>
+                                
                             </div>
                         </div>
                 
@@ -776,6 +1228,147 @@
                         
                     </div>
                 </div>
+
+                 <!--Modal CAJA
+                -------------------------------------------------------------------------------------------------------------------------->
+                
+                <div class="modal-overlay" id="modalCaja">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 id="modalTextCaja">Nuevo turno de caja</h3>
+                            <button class="modal-cerrar" onclick="cerrarModalCaja('modalCaja')">✕</button>
+                        </div>
+
+                        <div class="modal-body" >
+
+                            <!-- Descripción del número de caja -->
+                            <div class="form-grupo-1">
+                                <label class="labelGrupo">N0 caja</label>
+                                <select  id="SelectNumCaja" required>
+                                    <option value="">-- Seleccione el número de caja --</option>
+                                </select>
+                               
+                            </div>
+
+                            <!-- Seleccionar a un empleado -->
+                            <div class="form-group-1">
+                                <label class="labelGrupo">Empleado</label>
+                                <select id="SelectEmpleado" required>
+                                    <option value="">-- Seleccione --</option>
+                                </select>
+                            </div>
+                
+
+                            <!-- Saldo inicial -->
+                            <div class="form-grupo">
+                                <input type="number" min="0" step="0.01" required class="input-nombre" id="CajaPrecioInicial" autocomplete="off">
+                                <label for="CajaPrecioInicial" class="lbl-nombre">
+                                    <span class="text-nomb" style="font-size: 17px;">Saldo inicial</span>
+                                </label>
+                            </div>
+
+                            <div class="form-group-1" style="padding-top: 20px;">
+                                <label>Fecha de inicio</label>
+                                <input id="FechaInicioCaja" type="date" readonly>
+                            </div>
+                           
+
+                            <p class="form-error" id="errorCaja"></p>
+                        </div>
+
+                        <div class="class-footer">
+                            <button class="btn btn-secundario" onclick="cerrarModalCaja('modalCaja')">Cancelar</button>
+                            <button class="btn btn-primario" onclick="guardarCaja()">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+
+                
+                
+                <div class="modal-overlay" id="modalMomientoCaja">
+                    <div class="modal_detalles">
+
+                        <div class="modal-header">
+                            <h2>Movimientos del turno de caja</h2>
+
+                            <button
+                                type="button"
+                                class="btn-cerrar-modal"
+                                onclick="cerrarModalMovimientoCaja()"
+                                aria-label="Cerrar modal">
+                                &times;
+                            </button>
+                        </div>
+
+                        <!-- Información general del turno -->
+                        <div class="resumen-turno">
+
+                            <div class="resumen-card">
+                                <span>Número de caja</span>
+                                <strong id="detalleNumeroCaja">—</strong>
+                            </div>
+
+                            <div class="resumen-card">
+                                <span>Empleado</span>
+                                <strong id="detalleEmpleado">—</strong>
+                            </div>
+
+                            <div class="resumen-card">
+                                <span>Fecha de apertura</span>
+                                <strong id="detalleFechaApertura">—</strong>
+                            </div>
+
+                            <div class="resumen-card">
+                                <span>Estado del turno</span>
+                                <strong id="detalleEstadoTurno">—</strong>
+                            </div>
+
+                        </div>
+
+                        <div class="separador-modal"></div>
+
+                        <!-- Historial de movimientos -->
+                        <div class="historial-movimientos">
+                            <h3>Historial de movimientos</h3>
+
+                            <p id="cargandoMovimientos" class="estado-movimientos">
+                                Cargando movimientos...
+                            </p>
+
+                            <div
+                                id="contenedorTablaMovimientos"
+                                class="contenedor-tabla-movimientos"
+                                hidden>
+
+                                <table class="tabla-movimientos" id="tablaMovimientoCaja">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Tipo</th>
+                                            <th>Movimiento</th>
+                                            <th class="columna-monto">Monto</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="bodyMovimientoCaja"></tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+                        <div class="class-footer">
+                            <button
+                                type="button"
+                                class="btn-cerrar-final"
+                                onclick="cerrarModalMovimientoCaja()">
+                                Cerrar
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+
                 <!-- ================================================
                     MODAL INVENTARIO
                     

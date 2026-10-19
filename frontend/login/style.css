@@ -1,159 +1,226 @@
-/* Centrar la tarjeta en la pantalla */
+/* Reset global y fuentes */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
 body {
-    background-color: #f0f2f5;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    margin: 0;
-    font-family: 'Arial', sans-serif;
-
-    background: radial-gradient(
-        circle at center,
-        #6f7680 0%,
-        #4d535c 35%,
-        #2f3338 70%,
-        #16181b 100%
-    );
+    padding: 20px;
 }
 
 /* Contenedor Principal (Tarjeta) */
 .login_contenedor {
-    /*border: 3px solid blue;*/
-    display: flex; /* Esto pone los hijos en fila */
-    background: white;
-    width: 95vw;
-    max-width: 1100px;
-    height: 85vh;
-    background:#f5f5f5;;
-    margin: auto;
+    display: flex;
+    background: #ffffff;
+    width: 100%;
+    max-width: 950px;
+    min-height: 560px;
     border-radius: 20px;
-    overflow: hidden; /* Para que la imagen respete las esquinas redondeadas */
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
 }
 
-/* Sección de la Imagen */
+/* Sección de la Imagen/Banner Izquierdo */
 .login_visual {
-    border: 3px solid ge;
-    flex: 1; /* Toma el 50% del ancho */
-    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                url('fondo de login.jpg!w700wp'); /* Pon aquí el nombre de tu archivo */
+    flex: 1;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.75)), 
+                url('fondo de login.jpg!w700wp');
     background-size: cover;
     background-position: center;
     display: flex;
-    align-items: center;
-    padding: 10px;
-    color: white;
+    align-items: flex-end;
+    padding: 40px;
+    color: #ffffff;
+}
+
+.overlay_text h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+
+.overlay_text p {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    font-weight: 300;
+    line-height: 1.5;
 }
 
 /* Sección del Formulario */
 .login_form_section {
-   /* border: 3px solid blue;*/
-    flex: 1; /* Toma el otro 50% */
-    padding: 50px;
+    flex: 1;
+    padding: 50px 40px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    background-color: #ffffff;
 }
 
-/* Estilo de los Inputs (Redondeados como en Miro) */
-input {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 30px; /* Bordes redondeados */
-    box-sizing: border-box;
-    outline: none;
-    transition: 0.3s;
-}
-
-/* El Botón Morado */
-.btn_iniciar {
-    background-color: #6c5ce7;
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 25px;
-    width: 100%;
-    margin-top: 20px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 19px;
-}
-
-.overlay_text{
-    font-size: 30px;
-    gap: 30px;
-}
-
-.text-login{
+.text-login {
     text-align: center;
-    font-size: 39px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 30px;
 }
-.fromulario{
+
+#formulario {
     display: flex;
     flex-direction: column;
-    gap: 30px;
-}
-.txt-from{
-    font-size: 16px;
-    
+    gap: 18px;
 }
 
-.input_user{
-    font-size: 20px;
-    text-spacing-trim:0.4px;
+.txt-from {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.8px;
+    display: block;
+    margin-bottom: 6px;
 }
 
-.errorLogin{
-    font-size: 16px;
-    color: red;
+/* Estilo de los Inputs */
+.input_user {
+    width: 100%;
+    padding: 12px 18px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    outline: none;
+    font-size: 0.95rem;
+    color: #1e293b;
+    background-color: #f8fafc;
+    transition: all 0.25s ease;
 }
 
-/* Fondo oscuro que cubre toda la pantalla */
+.input_user:focus {
+    border-color: #6366f1;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+.input_user::placeholder {
+    color: #94a3b8;
+}
+
+/* Botón Iniciar */
+.btn_iniciar {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    width: 100%;
+    margin-top: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn_iniciar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.45);
+}
+
+.btn_iniciar:active {
+    transform: translateY(0);
+}
+
+/* Mensaje de Error */
+.errorLogin {
+    font-size: 0.85rem;
+    color: #ef4444;
+    text-align: center;
+    min-height: 20px;
+    font-weight: 500;
+}
+
+/* Overlay de Pantalla de Carga */
 .overlay-carga {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999; /* Asegura que esté por encima de TODO */
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
-/* Clase que usaremos en JS para mostrar la pantalla de carga */
 .overlay-carga.activo {
-  opacity: 1;
-  pointer-events: auto;
+    opacity: 1;
+    pointer-events: auto;
 }
 
-/* Contenedor del texto y spinner */
 .spinner-contenedor {
-  text-align: center;
-  color: white;
-  font-family: sans-serif;
-  font-size: 1.2rem;
+    text-align: center;
+    color: #ffffff;
 }
 
-/* El círculo giratorio (Spinner) */
+.spinner-contenedor p {
+    font-size: 1rem;
+    color: #e2e8f0;
+    font-weight: 500;
+}
+
 .spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid rgba(255, 255, 255, 0.3);
-  border-top: 5px solid #2563eb; /* Color azul (puedes cambiarlo al de tu botón) */
-  border-radius: 50%;
-  margin: 0 auto 15px auto;
-  animation: girar 1s linear infinite;
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.15);
+    border-top: 4px solid #6366f1;
+    border-radius: 50%;
+    margin: 0 auto 16px auto;
+    animation: girar 0.8s linear infinite;
 }
 
 @keyframes girar {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Adaptación Responsiva (Móviles) */
+@media (max-width: 768px) {
+    .login_contenedor {
+        flex-direction: column;
+        max-width: 420px;
+        min-height: auto;
+    }
+
+    .login_visual {
+        min-height: 180px;
+        padding: 25px;
+    }
+
+    .overlay_text h1 {
+        font-size: 1.6rem;
+    }
+
+    .overlay_text p {
+        font-size: 0.85rem;
+    }
+
+    .login_form_section {
+        padding: 30px 25px;
+    }
+
+    .text-login {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
 }

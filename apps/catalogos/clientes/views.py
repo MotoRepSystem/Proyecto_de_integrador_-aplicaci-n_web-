@@ -45,3 +45,26 @@ class ClienteIDAPIView(APIView):
         clientes.estado=False # Eliminado logico
         clientes.save()
         return Response(status=status.HTTP_204_NO_CONTENT) 
+
+class ClienteEliminarFisicoAPIView(APIView):
+
+    @swagger_auto_schema(
+        responses={
+            204: 'Cliente eliminado físicamente',
+            404: 'Cliente no encontrado'
+        }
+    )
+    def delete(self, request, pk):
+
+        try:
+            cliente = Clientes.objects.get(pk=pk)
+
+        except Clientes.DoesNotExist:
+            return Response(
+                {'error': 'Cliente no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        cliente.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

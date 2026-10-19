@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,6 +20,7 @@ from apps.seguridad.setting_apps import SEGURIDAD_SETTING_APPS
 from apps.catalogos.setting_apps import CATALOGOS_SETTING_APPS
 from apps.movimiento.setting_apps import MOVIMIENTO_SETTING_APPS
 from apps.dashboard.setting_apps import DASHBOARD_SETTING_APPS
+from apps.incidencias.setting_apps import INCIDENCIAS_SETTING_APPS
 
 from datetime import timedelta
 
@@ -26,7 +28,7 @@ from datetime import timedelta
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-$amp(!mx3(43u%w&q6+7wetq1fgmwe48-(ivni78+7wiq_=op7'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 #DEBUG = True
@@ -47,11 +49,11 @@ INSTALLED_APPS = [
     'drf_yasg',
     'corsheaders',
     'rest_framework_simplejwt', 
-] + SEGURIDAD_SETTING_APPS + CATALOGOS_SETTING_APPS + MOVIMIENTO_SETTING_APPS + DASHBOARD_SETTING_APPS
-
+] + SEGURIDAD_SETTING_APPS + CATALOGOS_SETTING_APPS + MOVIMIENTO_SETTING_APPS + DASHBOARD_SETTING_APPS + INCIDENCIAS_SETTING_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -114,18 +116,30 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-    # 'rest_framework.permissions.IsAuthenticated',
+     'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=12),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
+}
+
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False, # Desactiva el botón de Django Login que da error
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
 }
 
 # Internationalization
@@ -144,6 +158,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

@@ -3,8 +3,7 @@ from django.urls import path, include
 
 urlpatterns = [
 
- path("caja/", include('apps.movimiento.caja.urls')),
- path("caja/", include('apps.movimiento.caja.urls', namespace='movimientoCaja')),
+ path("caja/", include(('apps.movimiento.caja.urls', 'caja'), namespace='caja')),
  path ("compras/",include('apps.movimiento.compra.urls',namespace='compra')),
  path ("compras/", include('apps.movimiento.compra.urls',namespace='detalles')),
  path ("compras/", include('apps.movimiento.compra.urls',namespace='compra_credito')),
