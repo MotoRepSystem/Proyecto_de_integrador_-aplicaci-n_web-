@@ -30,87 +30,37 @@ from django.db.models.functions import Concat
 from apps.movimiento.factura.models import Facturas
 
 # VISTA PARA LISTAR Y REGISTRAR CLIENTES
-class ClienteApiview(APIView):
-
-    # Consultar todos los clientes activos
-    @swagger_auto_schema(
-        responses={200: ClienteSerializer(many=True)}
-    )
-    def get(self, request):
-
-        # Obtener clientes activos ordenados por ID descendente
-        clientes = Clientes.objects.filter(
-            estado=True
-        ).order_by("-id")
-
-        # Convertir los clientes a formato JSON
-        serializer = ClienteSerializer(clientes, many=True)
-
-        # Devolver la lista de clientes
+class ClienteApiview (APIView):
+     
+    @swagger_auto_schema(responses={200: ClienteSerializer(many=True)})
+    def get(self,request):
+        serializer=ClienteSerializer(Clientes.objects.filter(estado=True).order_by('-id'), many=True)
         return Response(serializer.data)
-
-    # Registrar un nuevo cliente
-    @swagger_auto_schema(
-        request_body=ClienteSerializer,
-        responses={201: ClienteSerializer}
-    )
-    def post(self, request):
-
-        # Validar los datos recibidos
-        serializer = ClienteSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        # Guardar el nuevo cliente
-        serializer.save()
-
-        # Devolver el cliente registrado
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED
-        )
+    
+    @swagger_auto_schema(request_body=ClienteSerializer, responses={201: ClienteSerializer})
+    def post(self,request):
+       serializer=ClienteSerializer(data=request.data)
+       serializer.is_valid(raise_exception=True)
+       serializer.save()
+       return Response(status=status.HTTP_201_CREATED,data=serializer.data)
 
 
 # VISTA PARA ACTUALIZAR Y ELIMINAR CLIENTES
-class ClienteIDAPIView(APIView):
-
-    # Actualizar parcialmente los datos de un cliente
-    @swagger_auto_schema(
-        request_body=ClienteSerializer,
-        responses={200: ClienteSerializer}
-    )
+class ClienteIDAPIView(APIView):   
+    @swagger_auto_schema(request_body=ClienteSerializer, responses={200: ClienteSerializer})
     def patch(self, request, pk):
-
-        # Buscar el cliente activo por su ID
+        
         try:
-            cliente = Clientes.objects.filter(
-                estado=True
-            ).get(pk=pk)
-
+            cliente = Clientes.objects.filter(estado=True).get(pk=pk)
         except Clientes.DoesNotExist:
-            return Response(
-                {"error": "Cliente no encontrado"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({'error': 'Cliente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Validar los datos que se desean actualizar
-        serializer = ClienteSerializer(
-            cliente,
-            data=request.data,
-            partial=True
-        )
-
-        # Guardar los cambios si son válidos
+        serializer = ClienteSerializer(cliente, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Devolver los errores de validación
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # Eliminar lógicamente un cliente
     @swagger_auto_schema(responses={204: 'No Content'})
     def delete(self, request, pk):
       
@@ -121,9 +71,8 @@ class ClienteIDAPIView(APIView):
 
         clientes.estado=False # Eliminado logico
         clientes.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-         
-
+        return Response(status=status.HTTP_204_NO_CONTENT) 
+    
 class ClienteEliminarFisicoAPIView(APIView):
 
     @swagger_auto_schema(
