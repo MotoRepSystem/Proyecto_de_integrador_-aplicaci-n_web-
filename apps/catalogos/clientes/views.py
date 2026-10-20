@@ -4,8 +4,13 @@ from rest_framework.response import Response
 from rest_framework import status
 
 # Importar la conexión con la colección de encuestas en MongoDB.
-from apps.encuestas.encuesta.conexion_mongodb import coleccion_encuestas
 
+from config.mongodb import (
+    comprobar_conexion,
+    db_mongo,
+)
+
+coleccion_encuestas = db_mongo["encuestas_satisfaccion"]
 # Importar el error de conexión de MongoDB.
 from pymongo.errors import PyMongoError
 
@@ -106,14 +111,18 @@ class ClienteIDAPIView(APIView):
         )
 
     # Eliminar lógicamente un cliente
-    @swagger_auto_schema(
-        responses={204: "No Content"}
-    )
+    @swagger_auto_schema(responses={204: 'No Content'})
     def delete(self, request, pk):
+      
+        try:
+            clientes = Clientes.objects.filter(estado=True).get(pk=pk)
+        except Clientes.DoesNotExist:
+            return Response({'error': 'Cliente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
         clientes.estado=False # Eliminado logico
         clientes.save()
-        return Response(status=status.HTTP_204_NO_CONTENT) 
+        return Response(status=status.HTTP_204_NO_CONTENT)
+         
 
 class ClienteEliminarFisicoAPIView(APIView):
 
@@ -137,26 +146,7 @@ class ClienteEliminarFisicoAPIView(APIView):
         cliente.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-        # Buscar el cliente activo
-        try:
-            cliente = Clientes.objects.filter(
-                estado=True
-            ).get(pk=pk)
-
-        except Clientes.DoesNotExist:
-            return Response(
-                {"error": "Cliente no encontrado"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Marcar el cliente como inactivo
-        cliente.estado = False
-        cliente.save()
-
-        # Confirmar la eliminación lógica
-        return Response(
-            status=status.HTTP_204_NO_CONTENT
-        )
+        
 
 # VISTA PARA BUSCAR CLIENTES Y SUS FACTURAS PARA LA ENCUESTA
 class ClienteEncuestaAPIView(APIView):
