@@ -12,10 +12,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 # Importar la conexión y la colección de encuestas.
-from .conexion_mongodb import (
-    coleccion_encuestas,
+from config.mongodb import (
     comprobar_conexion,
+    db_mongo,
 )
+
+coleccion_encuestas = db_mongo["encuestas_satisfaccion"]
 
 # Importar el serializer de encuestas.
 from .serializers import EncuestaSerializer
