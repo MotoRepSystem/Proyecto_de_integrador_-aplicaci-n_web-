@@ -185,18 +185,6 @@ class ClienteEncuestaAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Verificar si hay varios clientes con el mismo nombre
-        if clientes_encontrados.count() > 1:
-            return Response(
-                {
-                    "mensaje": (
-                        "Hay varios clientes con ese nombre completo. "
-                        "Se necesita otro dato para identificarlos."
-                    )
-                },
-                status=status.HTTP_409_CONFLICT
-            )
-
         # Obtener el único cliente encontrado
         cliente = clientes_encontrados.first()
 

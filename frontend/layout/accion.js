@@ -2266,7 +2266,7 @@ async function cargarOpcionesEmpleado() {
       var Empleados = empleados[i];
       var option = document.createElement("option");
       option.value = Empleados.id; // ← esto es lo que se envía como  en el body
-      option.textContent = `${`${Empleados.Nombres}` + `${Empleados.Apellidos}`}`; // ← esto es lo que ve el usuario
+      option.textContent = `${`${Empleados.Nombres} ` + `${Empleados.Apellidos}`}`; // ← esto es lo que ve el usuario
       select.appendChild(option);
     }
   } catch (error) {
