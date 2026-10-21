@@ -128,6 +128,8 @@ class EncuestaCrearView(APIView):
             # Guardar la fecha en el documento.
             datos_encuesta["fecha_encuesta"] = fecha_encuesta
 
+            
+
             # Registrar la encuesta en MongoDB.
             resultado = coleccion_encuestas.insert_one(datos_encuesta)
 

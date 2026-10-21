@@ -1,17 +1,15 @@
 from rest_framework import serializers
 
-
 class SatisfaccionServicioSerializer(serializers.Serializer):
-    satisfaccion_general = serializers.CharField()
-    atencion_personal = serializers.CharField()
-    experiencia_compra = serializers.CharField()
+    satisfaccion_general = serializers.IntegerField(min_value=1, max_value=5)
+    atencion_personal = serializers.IntegerField(min_value=1, max_value=5)
+    experiencia_compra = serializers.IntegerField(min_value=1, max_value=5)
 
 
 class PreferenciasUsoSerializer(serializers.Serializer):
-    facilidad_encontrar_producto = serializers.CharField()
-    variedad_productos = serializers.CharField()
+    facilidad_encontrar_producto = serializers.IntegerField(min_value=1, max_value=5)
+    variedad_productos = serializers.IntegerField(min_value=1, max_value=5)
     marca_preferida = serializers.CharField()
-
 
 class EncuestaSerializer(serializers.Serializer):
     cliente_id = serializers.IntegerField()
