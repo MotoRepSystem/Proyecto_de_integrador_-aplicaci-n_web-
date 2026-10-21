@@ -1,6 +1,7 @@
 # Importar las funciones para manejar fechas y horas.
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
+from rest_framework.permissions import AllowAny
 
 # Importar los errores de MongoDB, incluidos los duplicados.
 from pymongo.errors import PyMongoError, DuplicateKeyError
@@ -32,6 +33,8 @@ from apps.movimiento.factura.models import Facturas
 
 # Vista para registrar una encuesta de satisfacción.
 class EncuestaCrearView(APIView):
+
+    permission_classes = [AllowAny]
 
     # Documentar la petición en Swagger.
     @swagger_auto_schema(

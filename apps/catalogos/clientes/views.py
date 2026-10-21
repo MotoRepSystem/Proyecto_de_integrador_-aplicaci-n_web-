@@ -2,9 +2,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 
 # Importar la conexión con la colección de encuestas en MongoDB.
-
 from config.mongodb import (
     comprobar_conexion,
     db_mongo,
@@ -31,7 +31,10 @@ from apps.movimiento.factura.models import Facturas
 
 # VISTA PARA LISTAR Y REGISTRAR CLIENTES
 class ClienteApiview (APIView):
-     
+ 
+  # Permite consultar sin JWT para iniciar el flujo de encuesta.
+    permission_classes = [AllowAny]
+
     @swagger_auto_schema(responses={200: ClienteSerializer(many=True)})
     def get(self,request):
         serializer=ClienteSerializer(Clientes.objects.filter(estado=True).order_by('-id'), many=True)
@@ -99,6 +102,9 @@ class ClienteEliminarFisicoAPIView(APIView):
 
 # VISTA PARA BUSCAR CLIENTES Y SUS FACTURAS PARA LA ENCUESTA
 class ClienteEncuestaAPIView(APIView):
+
+     # Permite buscar al cliente sin exigir un token JWT.
+    permission_classes = [AllowAny]
 
     @swagger_auto_schema(
         operation_description=(
