@@ -1,4 +1,4 @@
-const urlAPI = "motorepsystemapi-a9a4cmbfcte0hshq.westus-01.azurewebsites.net/";
+const urlAPI = "https://motorepsystemapi-a9a4cmbfcte0hshq.westus-01.azurewebsites.net/";
 
 //const urlAPI = "https://qv0zgr4k-8000.use2.devtunnels.ms/"
 //const urlAPI = "http://127.0.0.1:8000/";
