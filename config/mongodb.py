@@ -17,7 +17,6 @@ db_mongo = cliente_mongo[MONGO_DB_NAME]
 
 
 def comprobar_conexion():
-    """
-    Comprueba que el servidor MongoDB responda.
-    """
+
+    #Comprueba que el servidor MongoDB responda.
     return cliente_mongo.admin.command("ping")

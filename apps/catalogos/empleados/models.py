@@ -1,6 +1,7 @@
 from django.db import models
 
 class Empleados (models.Model):
+    syncId = models.UUIDField(unique=True, null=True, blank=True, editable=False)
     Nombres = models.CharField(verbose_name='Nombres', max_length=100)
     Apellidos = models.CharField(verbose_name='Apellidos', max_length=100)
     Telefono = models.CharField(verbose_name='Teléfono', max_length=8)
@@ -10,5 +11,5 @@ class Empleados (models.Model):
     class Meta:
        verbose_name_plural= 'Empleados'
 
-    def __str__ (selt):
-      return f"{selt.Nombres} - {selt.Apellidos}"
+    def __str__ (self):
+      return f"{self.Nombres} - {self.Apellidos}"
