@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'corsheaders',
-    'rest_framework_simplejwt', 
+    'rest_framework_simplejwt',
+    'kpis'
 ] + SEGURIDAD_SETTING_APPS + CATALOGOS_SETTING_APPS + BI_SETTING_APPS + MOVIMIENTO_SETTING_APPS + DASHBOARD_SETTING_APPS + INCIDENCIAS_SETTING_APPS + ENCUESTAS_SETTING_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

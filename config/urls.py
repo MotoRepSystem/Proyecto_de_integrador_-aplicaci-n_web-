@@ -64,4 +64,7 @@ urlpatterns = [
     path('encuestas/',include('apps.encuestas.encuesta.urls')),
 
     path('bi/', include('apps.bi.urls')),
+
+
+    path("kpis/", include("kpis.urls")),
 ]
