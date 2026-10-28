@@ -62,4 +62,6 @@ urlpatterns = [
 
     # Encuestas
     path('encuestas/',include('apps.encuestas.encuesta.urls')),
+
+    path('api/bi/', include('apps.bi.urls')),
 ]

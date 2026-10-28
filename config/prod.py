@@ -21,7 +21,7 @@ DATABASES = {
         'PORT': config('DB_PORT', default='1433'),
         'OPTIONS': {
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'Encrypt=yes;TrustServerCertificate=no',
+            'extra_params': 'Encrypt=yes;TrustServerCertificate=no;',
         },
     },
 
@@ -34,10 +34,24 @@ DATABASES = {
         'PORT': config('DB_PORT', default='1433'),
         'OPTIONS': {
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': 'Encrypt=yes;TrustServerCertificate=no',
+            'extra_params': 'Encrypt=yes;TrustServerCertificate=no;',
+        },
+    },
+
+    'olap': {
+        'ENGINE': 'mssql',
+        'NAME': config('OLAP_DB_NAME'),
+        'USER': config('OLAP_DB_USER'),
+        'PASSWORD': config('OLAP_DB_PASSWORD'),
+        'HOST': config('OLAP_DB_HOST'),
+        'PORT': config('OLAP_DB_PORT', default='1433'),
+        'OPTIONS': {
+            'driver': 'ODBC Driver 18 for SQL Server',
+            'extra_params': 'Encrypt=yes;TrustServerCertificate=no;',
         },
     },
 }
+
 
 CSRF_TRUSTED_ORIGINS = [
     f"https://{config('ALLOWED_HOST')}",
