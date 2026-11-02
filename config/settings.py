@@ -23,7 +23,7 @@ from apps.dashboard.setting_apps import DASHBOARD_SETTING_APPS
 from apps.incidencias.setting_apps import INCIDENCIAS_SETTING_APPS
 from apps.encuestas.setting_apps import ENCUESTAS_SETTING_APPS
 from apps.bi.setting_apps import BI_SETTING_APPS
-
+from apps.kpis.setting_apps import KPIS_SETTING_APPS
 
 from datetime import timedelta
 
@@ -55,8 +55,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'corsheaders',
     'rest_framework_simplejwt',
-    'kpis'
-] + SEGURIDAD_SETTING_APPS + CATALOGOS_SETTING_APPS + BI_SETTING_APPS + MOVIMIENTO_SETTING_APPS + DASHBOARD_SETTING_APPS + INCIDENCIAS_SETTING_APPS + ENCUESTAS_SETTING_APPS
+] + SEGURIDAD_SETTING_APPS + CATALOGOS_SETTING_APPS + BI_SETTING_APPS + KPIS_SETTING_APPS + MOVIMIENTO_SETTING_APPS + DASHBOARD_SETTING_APPS + INCIDENCIAS_SETTING_APPS + ENCUESTAS_SETTING_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
