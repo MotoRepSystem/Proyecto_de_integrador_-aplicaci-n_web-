@@ -66,5 +66,5 @@ urlpatterns = [
     path('bi/', include('apps.bi.urls')),
 
 
-    path("kpis/", include("kpis.urls")),
+    path("kpis/", include("apps.kpis.urls")),
 ]
