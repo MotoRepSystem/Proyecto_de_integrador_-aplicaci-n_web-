@@ -7,7 +7,7 @@ from apps.movimiento.movimientoPago.models import MovimientoPago
 
 class DetalleFacturaSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.CharField(
-        source='loteId.DetalleCompraId.detallProductoId.producto.Nombre', 
+        source='loteId.DetalleCompraId.DetalleProductoId.producto.Nombre', 
         read_only=True
     )
 
@@ -52,11 +52,28 @@ class MovimientoCajaResponseSerializer(serializers.ModelSerializer):
 # --- SERIALIZER PRINCIPAL DE FACTURA ---
 
 class FacturaSerializer(serializers.ModelSerializer):
-    cliente_nombre = serializers.CharField(source='ClienteId.Nombres', read_only=True)
-    cliente_cedula = serializers.CharField(source='ClienteId.NumCedula', read_only=True)
-    condicion_nombre = serializers.CharField(source='condicionId.descripcion', read_only=True)
-    fecha_formateada = serializers.DateTimeField(source='Fecha', format='%d/%m/%Y %I:%M:%S %p', read_only=True)
-    
+
+    cliente_nombre = serializers.CharField(
+        source='ClienteId.Nombres',
+        read_only=True
+    )
+
+    cliente_cedula = serializers.CharField(
+        source='ClienteId.NumCedula',
+        read_only=True
+    )
+
+    condicion_nombre = serializers.CharField(
+        source='condicionId.descripcion',
+        read_only=True
+    )
+
+    fecha_formateada = serializers.DateTimeField(
+        source='Fecha',
+        format='%d/%m/%Y %I:%M:%S %p',
+        read_only=True
+    )
+
     detalles = DetalleFacturaSerializer(many=True, read_only=True)
     credito = serializers.SerializerMethodField()
     movimiento_caja = serializers.SerializerMethodField()
@@ -69,16 +86,47 @@ class FacturaSerializer(serializers.ModelSerializer):
             'condicionId', 'condicion_nombre',
             'detalles', 'credito', 'movimiento_caja'
         ]
-        read_only_fields = ['id', 'Total', 'fecha_formateada']
 
+        read_only_fields = [
+            'id', 'Total', 'fecha_formateada'
+        ]
+
+    # NUEVO MÉTODO
     def get_credito(self, obj):
-        credito_obj = FacturasCredito.objects.filter(FacturaId=obj).first()
+
+        creditos = getattr(obj, 'creditos_prefetch', None)
+
+        if creditos is None:
+            credito_obj = FacturasCredito.objects.filter(
+                FacturaId=obj
+            ).first()
+        else:
+            credito_obj = creditos[0] if creditos else None
+
         if credito_obj:
             return FacturaCreditoSerializer(credito_obj).data
+
         return None
 
+    # NUEVO MÉTODO
     def get_movimiento_caja(self, obj):
-        movimiento_obj = MovimientoCaja.objects.filter(facturaid=obj).first()
+
+        movimientos = getattr(
+            obj,
+            'movimientos_caja_prefetch',
+            None
+        )
+
+        if movimientos is None:
+            movimiento_obj = MovimientoCaja.objects.filter(
+                facturaid=obj
+            ).first()
+        else:
+            movimiento_obj = movimientos[0] if movimientos else None
+
         if movimiento_obj:
-            return MovimientoCajaResponseSerializer(movimiento_obj).data
+            return MovimientoCajaResponseSerializer(
+                movimiento_obj
+            ).data
+
         return None
