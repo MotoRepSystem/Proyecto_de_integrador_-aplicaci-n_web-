@@ -355,24 +355,28 @@ class IncidenciaCrearView(APIView):
             )
 
 #GET de incidencias para mostrarlas en app movil y web
-
 import logging
 from datetime import datetime, timezone as dt_timezone
+from zoneinfo import ZoneInfo
 
 from bson import ObjectId
 from bson.decimal128 import Decimal128
 from bson.errors import InvalidId
 
-from rest_framework.permissions import IsAdminUser
+from rest_framework import status
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
 
 from pymongo.errors import PyMongoError
 
 from config.mongodb import db_mongo
+from .views import IncidenciaCrearView  # AJUSTA al archivo donde vive
 
 logger = logging.getLogger(__name__)
+
+ZONA_LOCAL = ZoneInfo("America/Managua")
+FORMATO_FECHA = "%Y-%m-%dT%H:%M:%S"
 
 
 def serializar(valor):
@@ -381,13 +385,11 @@ def serializar(valor):
         return str(valor)
     if isinstance(valor, datetime):
         if valor.tzinfo is None:
-            valor = valor.replace(tzinfo=dt_timezone.utc)
-        return (
-             valor.astimezone(dt_timezone.utc)
-    .strftime("%Y-%m-%dT%H:%M:%S")
-        )
+            valor = valor.replace(tzinfo=dt_timezone.utc)  # pymongo entrega UTC
+        # Se entrega en hora de Managua, igual que las fechas que ya son string
+        return valor.astimezone(ZONA_LOCAL).strftime(FORMATO_FECHA)
     if isinstance(valor, Decimal128):
-        return str(valor.to_decimal())  # string: no pierde precisión
+        return str(valor.to_decimal())
     if isinstance(valor, dict):
         return {k: serializar(v) for k, v in valor.items()}
     if isinstance(valor, list):
@@ -396,32 +398,12 @@ def serializar(valor):
 
 
 class IncidenciaListaView(APIView):
-    permission_classes = [IsAuthenticated]  
-    LIMITE_MAXIMO = 100
+    permission_classes = [IsAuthenticated]
+
+    LIMITE = 20  # siempre las 20 más recientes
 
     def get(self, request):
         params = request.query_params
-
-        try:
-            page = int(params.get("page", 1))
-            limit = int(params.get("limit", 20))
-        except ValueError:
-            return Response(
-                {"error": "page y limit deben ser enteros."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if page < 1 or not 1 <= limit <= self.LIMITE_MAXIMO:
-            return Response(
-                {
-                    "error": (
-                        f"page debe ser >= 1 y limit entre "
-                        f"1 y {self.LIMITE_MAXIMO}."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         filtro = {}
 
         tipo = params.get("tipo_incidencia")
@@ -446,17 +428,30 @@ class IncidenciaListaView(APIView):
                 )
             filtro["gestion.prioridad"] = prioridad
 
-        coleccion = db_mongo["Incidencia"]
+        pipeline = [
+            {"$match": filtro},
+            {
+                "$addFields": {
+                    "_orden": {
+                        "$convert": {
+                            "input": "$fecha_registro",
+                            "to": "date",
+                            "onError": None,
+                            "onNull": None,
+                        }
+                    }
+                }
+            },
+            {"$sort": {"_orden": -1, "_id": -1}},
+            {"$limit": self.LIMITE},
+            {"$project": {"_orden": 0}},
+        ]
 
         try:
-            total = coleccion.count_documents(filtro)
-            cursor = (
-                coleccion.find(filtro)
-                .sort([("fecha_registro", -1), ("_id", -1)])
-                .skip((page - 1) * limit)
-                .limit(limit)
-            )
-            resultados = [serializar(doc) for doc in cursor]
+            resultados = [
+                serializar(doc)
+                for doc in db_mongo["Incidencia"].aggregate(pipeline)
+            ]
         except PyMongoError:
             logger.exception("Error al listar incidencias")
             return Response(
@@ -466,41 +461,10 @@ class IncidenciaListaView(APIView):
 
         return Response(
             {
-                "total": total,
-                "page": page,
-                "limit": limit,
-                "total_paginas": -(-total // limit),
+                "total": len(resultados),
+                "page": 1,
+                "limit": self.LIMITE,
+                "total_paginas": 1,
                 "resultados": resultados,
             }
         )
-
-
-class IncidenciaDetalleView(APIView):
-    permission_classes = [IsAdminUser]
-
-    def get(self, request, incidencia_id):
-        try:
-            oid = ObjectId(incidencia_id)
-        except (InvalidId, TypeError):
-            return Response(
-                {"error": "El identificador no es válido."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            doc = db_mongo["Incidencia"].find_one({"_id": oid})
-        
-        except PyMongoError:
-            logger.exception("Error al consultar incidencia %s", incidencia_id)
-            return Response(
-                {"error": "No fue posible consultar la incidencia."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
-
-        if doc is None:
-            return Response(
-                {"error": "Incidencia no encontrada."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        return Response(serializar(doc))
