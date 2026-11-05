@@ -126,8 +126,9 @@ class EncuestaCrearView(APIView):
                 fecha_encuesta = datetime.now(ZoneInfo("UTC"))
 
             # Guardar la fecha en el documento.
-            datos_encuesta["fecha_encuesta"] = fecha_encuesta
-
+            datos_encuesta["fecha_encuesta"] = fecha_encuesta.strftime(
+            "%Y-%m-%dT%H:%M:%S"
+             )
             
 
             # Registrar la encuesta en MongoDB.

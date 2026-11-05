@@ -1,4 +1,3 @@
-
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 import math
@@ -11,11 +10,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-
 from pymongo.errors import PyMongoError
-
 from config.mongodb import db_mongo
-
 
 class IncidenciaCrearView(APIView):
     permission_classes = [IsAuthenticated]
@@ -316,7 +312,8 @@ class IncidenciaCrearView(APIView):
 
         # 11. Construir el documento para MongoDB.
         documento = {
-            "fecha_registro": fecha,
+            "fecha_registro": fecha.astimezone(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%S"),
             "tipo_incidencia": tipo,
             "origen": origen_documento,
             "detalle_incidencia": {
@@ -335,6 +332,7 @@ class IncidenciaCrearView(APIView):
         # 12. Insertar un documento nuevo.
         # No se actualizan ni eliminan los registros anteriores.
         try:
+
             resultado = db_mongo["Incidencia"].insert_one(documento)
 
             return Response(
@@ -355,10 +353,6 @@ class IncidenciaCrearView(APIView):
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
-
-
-
-
 
 #GET de incidencias para mostrarlas en app movil y web
 
@@ -389,9 +383,8 @@ def serializar(valor):
         if valor.tzinfo is None:
             valor = valor.replace(tzinfo=dt_timezone.utc)
         return (
-            valor.astimezone(dt_timezone.utc)
-            .isoformat()
-            .replace("+00:00", "Z")
+             valor.astimezone(dt_timezone.utc)
+    .strftime("%Y-%m-%dT%H:%M:%S")
         )
     if isinstance(valor, Decimal128):
         return str(valor.to_decimal())  # string: no pierde precisión
@@ -496,6 +489,7 @@ class IncidenciaDetalleView(APIView):
 
         try:
             doc = db_mongo["Incidencia"].find_one({"_id": oid})
+        
         except PyMongoError:
             logger.exception("Error al consultar incidencia %s", incidencia_id)
             return Response(
@@ -510,5 +504,3 @@ class IncidenciaDetalleView(APIView):
             )
 
         return Response(serializar(doc))
-
-
