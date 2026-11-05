@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
 const urlAPI = "https://motorepwebapi-crahash7fzd6hdd4.spaincentral-01.azurewebsites.net/";
-=======
-//const urlAPI = "https://motorepsystemapi-a9a4cmbfcte0hshq.westus-01.azurewebsites.net/";
->>>>>>> Stashed changes
 
 //const urlAPI = "http://127.0.0.1:8000/";
 
