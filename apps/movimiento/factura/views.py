@@ -15,15 +15,113 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 #from .models import Clientes, CondicionPago,EstadoCuenta,RegistroProducto
 
+from time import perf_counter        #perf_counter: mide tiempos de ejecución con precisión.
+from django.db import connection     #connection.execute_wrapper: nos permite observar las consultas SQL que Django ejecuta durante la serialización.
 
+from django.db.models import Prefetch
+
+
+from apps.movimiento.caja.models import MovimientoCaja
+
+from apps.movimiento.movimientoPago.models import MovimientoPago
 #------------------------------
 # FACTURA
 #------------------------------
 class FacturaAPIView (APIView):
+    
     @swagger_auto_schema(responses={200: FacturaSerializer(many=True)})
-    def get (self,request):
-        serializer= FacturaSerializer(Facturas.objects.filter(estado=True).order_by('-id'), many = True)
-        return Response (data=serializer.data)
+    def get(self, request):
+
+        tiempo_inicio = perf_counter()
+
+        estadisticas = {
+            "consultas_sql": 0,
+            "tiempo_sql_execute": 0.0
+        }
+
+        # Medir las ejecuciones SQL realizadas por Django
+        def medir_sql(execute, sql, params, many, context):
+
+            inicio_sql = perf_counter()
+
+            try:
+                return execute(sql, params, many, context)
+
+            finally:
+                duracion = perf_counter() - inicio_sql
+
+                estadisticas["consultas_sql"] += 1
+                estadisticas["tiempo_sql_execute"] += duracion
+
+        # Medir la recuperación y serialización
+        with connection.execute_wrapper(medir_sql):
+
+            queryset = Facturas.objects.filter(
+                estado=True
+            ).select_related(
+                'ClienteId',
+                'condicionId'
+            ).prefetch_related(
+
+                # 1. Detalles de factura y relaciones del producto
+                Prefetch(
+                    'detalles',
+                    queryset=DetalleFactura.objects.select_related(
+                        'loteId__DetalleCompraId__DetalleProductoId__producto'
+                    )
+                ),
+
+                # 2. Créditos de las facturas
+                Prefetch(
+                    'facturascredito_set',
+                    queryset=FacturasCredito.objects.select_related(
+                        'estadoCuentaId'
+                    ).order_by('pk'),
+                    to_attr='creditos_prefetch'
+                ),
+
+                # 3. Movimientos de caja
+                Prefetch(
+                    'movimientocaja_set',
+                    queryset=MovimientoCaja.objects.select_related(
+                        'tipoMovimientoCajaId',
+                        'turnoCajaId'
+                    ).prefetch_related(
+
+                        # 4. Pagos asociados al movimiento
+                        Prefetch(
+                            'movimientopago_set',
+                            queryset=MovimientoPago.objects.select_related(
+                                'metodoPagoId'
+                            )
+                        )
+
+                    ).order_by('pk'),
+                    to_attr='movimientos_caja_prefetch'
+                )
+
+            ).order_by('-id')
+
+            serializer = FacturaSerializer(
+                queryset,
+                many=True
+            )
+
+            datos = serializer.data
+
+        tiempo_total = perf_counter() - tiempo_inicio
+
+        tiempo_sql = estadisticas["tiempo_sql_execute"]
+        tiempo_fuera_execute = tiempo_total - tiempo_sql
+
+        print("\n========== DIAGNOSTICO FACTURAS ==========")
+        print(f"Consultas SQL: {estadisticas['consultas_sql']}")
+        print(f"Tiempo acumulado execute SQL: {tiempo_sql:.4f} segundos")
+        print(f"Tiempo fuera de execute SQL: {tiempo_fuera_execute:.4f} segundos")
+        print(f"Tiempo total GET: {tiempo_total:.4f} segundos")
+        print("==========================================\n")
+
+        return Response(data=datos)
     
     @swagger_auto_schema(request_body=FacturaSerializer)
     def post(self, request):

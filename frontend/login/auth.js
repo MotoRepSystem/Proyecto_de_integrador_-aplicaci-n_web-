@@ -2,7 +2,7 @@ const urlAPI = "https://motorepwebapi-crahash7fzd6hdd4.spaincentral-01.azurewebs
 
 //const urlAPI = "https://qv0zgr4k-8000.use2.devtunnels.ms/"
 //const urlAPI = "http://127.0.0.1:8000/";
-//prueba
+
 const formLogin = document.getElementById("formulario");
 
 if (formLogin) {
@@ -12,7 +12,7 @@ if (formLogin) {
 // === VARIABLES PARA EL CONTROL DE INACTIVIDAD ===
 let tiempoInactividad;
 let intervaloRefresco = null;
-const TIEMPO_LIMITE_INACTIVIDAD = 20 * 60 * 1000; // 5 minutos en milisegundos (Ajustable)
+const TIEMPO_LIMITE_INACTIVIDAD = 5 * 60 * 1000; // 5 minutos en milisegundos (Ajustable)
 
 // ==================== AUTENTICACIÓN ====================
 
