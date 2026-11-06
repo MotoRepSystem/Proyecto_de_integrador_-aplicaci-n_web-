@@ -5,6 +5,9 @@ from .models import Productos, DetalleProductos,RegistroProducto
 from .serialezers import ProductoSerializer,DetalleProductoSerializer,Registro_ProductoSerializer
 from drf_yasg.utils import swagger_auto_schema
 
+from django.db import connections
+from time import perf_counter
+
 class ProductoAPIView (APIView):
     def get (self,request):
         serializer= ProductoSerializer(Productos.objects.filter(estado=True), many=True)
@@ -87,10 +90,75 @@ class DetalleProductosIDAPIView(APIView):
 
 
 class Registro_ProductoApiView(APIView):
+
     def get(self, request):
-     Serializer= Registro_ProductoSerializer(RegistroProducto.objects.using('default').filter(estado=True).order_by('-id'), many=True)
-     return Response(status=status.HTTP_200_OK, data=Serializer.data)
-    
+
+        conexion = connections['default']
+
+        consultas_iniciales = len(conexion.queries)
+
+        inicio_total = perf_counter()
+
+        # 1. Construcción del queryset
+        queryset = (
+            RegistroProducto.objects
+            .using('default')
+            .filter(estado=True)
+            .select_related(
+                'DetalleCompraId',
+                'DetalleCompraId__DetalleProductoId',
+                'DetalleCompraId__DetalleProductoId__producto',
+                'DetalleCompraId__DetalleProductoId__MarcaId',
+                'DetalleCompraId__DetalleProductoId__MotoId',
+            )
+            .order_by('-id')
+        )
+
+        # 2. Recuperación de registros desde SQL Server
+        inicio_consulta = perf_counter()
+
+        registros = list(queryset)
+
+        tiempo_consulta = perf_counter() - inicio_consulta
+
+        # 3. Serialización de registros
+        inicio_serializacion = perf_counter()
+
+        serializer = Registro_ProductoSerializer(
+            registros,
+            many=True
+        )
+
+        datos = serializer.data
+
+        tiempo_serializacion = perf_counter() - inicio_serializacion
+
+        # 4. Diagnóstico general
+        tiempo_total = perf_counter() - inicio_total
+
+        consultas = conexion.queries[consultas_iniciales:]
+
+        tiempo_sql = sum(
+            float(consulta['time'])
+            for consulta in consultas
+        )
+
+        tiempo_fuera_sql = tiempo_total - tiempo_sql
+
+        print("\n========== DIAGNÓSTICO INVENTARIO ==========")
+        print(f"Registros obtenidos: {len(datos)}")
+        print(f"Consultas SQL: {len(consultas)}")
+        print(f"Tiempo acumulado SQL: {tiempo_sql:.4f} segundos")
+        print(f"Tiempo recuperación: {tiempo_consulta:.4f} segundos")
+        print(f"Tiempo serialización: {tiempo_serializacion:.4f} segundos")
+        print(f"Tiempo fuera de SQL: {tiempo_fuera_sql:.4f} segundos")
+        print(f"Tiempo total GET: {tiempo_total:.4f} segundos")
+        print("============================================\n")
+
+        return Response(
+            status=status.HTTP_200_OK,
+            data=datos
+        ) 
     @swagger_auto_schema(request_body=Registro_ProductoSerializer, responses={201: Registro_ProductoSerializer})
     def post(self,request):
         Serializer= Registro_ProductoSerializer(data=request.data)

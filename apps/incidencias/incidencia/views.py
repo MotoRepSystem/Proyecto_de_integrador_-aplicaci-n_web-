@@ -1,8 +1,6 @@
-from decimal import Decimal, InvalidOperation
 from datetime import datetime
 import math
 
-from bson.decimal128 import Decimal128
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -12,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from pymongo.errors import PyMongoError
 from config.mongodb import db_mongo
+
 
 class IncidenciaCrearView(APIView):
     permission_classes = [IsAuthenticated]
@@ -216,6 +215,7 @@ class IncidenciaCrearView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        
         # 8. Validar el monto según la categoría.
         monto_recibido = detalle.get("monto_involucrado")
 
@@ -245,14 +245,14 @@ class IncidenciaCrearView(APIView):
                 )
 
             try:
-                monto = Decimal(str(monto_recibido))
-            except (InvalidOperation, ValueError, TypeError):
+                monto_documento = float(monto_recibido)
+            except (ValueError, TypeError, OverflowError):
                 return Response(
                     {"error": "El monto debe ser un número válido."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            if not monto.is_finite() or monto < 0:
+            if not math.isfinite(monto_documento) or monto_documento < 0:
                 return Response(
                     {
                         "error": (
@@ -263,8 +263,6 @@ class IncidenciaCrearView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Guardar los valores monetarios como Decimal128 en MongoDB.
-            monto_documento = Decimal128(monto)
 
         # 9. Validar la prioridad.
         prioridad = gestion.get("prioridad")
