@@ -1,3 +1,4 @@
+
 # Importar las clases necesarias de Django REST Framework
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,7 +11,9 @@ from config.mongodb import (
     db_mongo,
 )
 
-coleccion_encuestas = db_mongo["encuestas_satisfaccion"]
+# Utilizar la colección Encuesta
+coleccion_encuestas = db_mongo["Encuesta"]
+
 # Importar el error de conexión de MongoDB.
 from pymongo.errors import PyMongoError
 
@@ -29,53 +32,84 @@ from django.db.models.functions import Concat
 # Importar el modelo de facturas de SQL Server
 from apps.movimiento.factura.models import Facturas
 
+
 # VISTA PARA LISTAR Y REGISTRAR CLIENTES
-class ClienteApiview (APIView):
- 
-  # Permite consultar sin JWT para iniciar el flujo de encuesta.
+class ClienteApiview(APIView):
+
+    # Permite consultar sin JWT para iniciar el flujo de encuesta.
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(responses={200: ClienteSerializer(many=True)})
-    def get(self,request):
-        serializer=ClienteSerializer(Clientes.objects.filter(estado=True).order_by('-id'), many=True)
+    def get(self, request):
+        serializer = ClienteSerializer(
+            Clientes.objects.filter(estado=True).order_by('-id'),
+            many=True
+        )
         return Response(serializer.data)
-    
-    @swagger_auto_schema(request_body=ClienteSerializer, responses={201: ClienteSerializer})
-    def post(self,request):
-       serializer=ClienteSerializer(data=request.data)
-       serializer.is_valid(raise_exception=True)
-       serializer.save()
-       return Response(status=status.HTTP_201_CREATED,data=serializer.data)
+
+    @swagger_auto_schema(
+        request_body=ClienteSerializer,
+        responses={201: ClienteSerializer}
+    )
+    def post(self, request):
+        serializer = ClienteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data=serializer.data
+        )
 
 
 # VISTA PARA ACTUALIZAR Y ELIMINAR CLIENTES
-class ClienteIDAPIView(APIView):   
-    @swagger_auto_schema(request_body=ClienteSerializer, responses={200: ClienteSerializer})
+class ClienteIDAPIView(APIView):
+
+    @swagger_auto_schema(
+        request_body=ClienteSerializer,
+        responses={200: ClienteSerializer}
+    )
     def patch(self, request, pk):
-        
+
         try:
             cliente = Clientes.objects.filter(estado=True).get(pk=pk)
         except Clientes.DoesNotExist:
-            return Response({'error': 'Cliente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'error': 'Cliente no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        serializer = ClienteSerializer(cliente, data=request.data, partial=True)
+        serializer = ClienteSerializer(
+            cliente,
+            data=request.data,
+            partial=True
+        )
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @swagger_auto_schema(responses={204: 'No Content'})
     def delete(self, request, pk):
-      
+
         try:
             clientes = Clientes.objects.filter(estado=True).get(pk=pk)
         except Clientes.DoesNotExist:
-            return Response({'error': 'Cliente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'error': 'Cliente no encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        clientes.estado=False # Eliminado logico
+        clientes.estado = False
         clientes.save()
-        return Response(status=status.HTTP_204_NO_CONTENT) 
-    
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class ClienteEliminarFisicoAPIView(APIView):
 
     @swagger_auto_schema(
@@ -98,12 +132,12 @@ class ClienteEliminarFisicoAPIView(APIView):
         cliente.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-        
+
 
 # VISTA PARA BUSCAR CLIENTES Y SUS FACTURAS PARA LA ENCUESTA
 class ClienteEncuestaAPIView(APIView):
 
-     # Permite buscar al cliente sin exigir un token JWT.
+    # Permite buscar al cliente sin exigir un token JWT.
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(
@@ -144,7 +178,8 @@ class ClienteEncuestaAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Eliminar espacios al inicio y al final y convertir varios espacios consecutivos en uno
+        # Eliminar espacios al inicio y al final
+        # y convertir varios espacios consecutivos en uno
         nombre_completo = " ".join(
             nombre_completo.split()
         )
@@ -168,7 +203,8 @@ class ClienteEncuestaAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Concatenar los campos Nombres y Apellidos de SQL Server para compararlos con el texto recibido
+        # Concatenar los campos Nombres y Apellidos
+        # para compararlos con el texto recibido
         clientes_encontrados = Clientes.objects.filter(
             estado=True
         ).annotate(
@@ -200,8 +236,7 @@ class ClienteEncuestaAPIView(APIView):
         )
 
         try:
-            # Buscar las encuestas que ya fueron registradas
-            # para este cliente en MongoDB
+            # Buscar las encuestas registradas en la colección Encuesta
             encuestas_registradas = coleccion_encuestas.find(
                 {
                     "cliente_id": cliente.id
@@ -231,7 +266,6 @@ class ClienteEncuestaAPIView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        
         # Excluir las facturas que ya tienen encuesta
         facturas = facturas.exclude(
             id__in=facturas_encuestadas
