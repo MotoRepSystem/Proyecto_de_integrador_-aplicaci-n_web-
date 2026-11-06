@@ -10,6 +10,112 @@ from .models import TurnoCaja, MovimientoCaja, Caja
 from .serializers import CajaSerializer, TurnoCajaSerializer, MovimientoCajaSerialiezer
 from apps.catalogos.empleados.models import Empleados
 
+from decimal import Decimal
+
+from django.apps import apps
+from django.db.models import (
+    Sum, OuterRef, Subquery, Value,
+    DecimalField, F, ExpressionWrapper
+)
+from django.db.models.functions import Coalesce
+
+from apps.movimiento.movimientoPago.models import MovimientoPago
+
+
+from time import perf_counter
+from django.db import connection
+
+
+
+def turnos_con_totales(queryset):
+
+    MovimientoPago = apps.get_model(
+        'movimientoPago',
+        'MovimientoPago'
+    )
+
+    dinero = DecimalField(
+        max_digits=12,
+        decimal_places=2
+    )
+
+    cero = Value(
+        Decimal('0.00'),
+        output_field=dinero
+    )
+
+    # Ingresos en efectivo
+    efectivo = (
+        MovimientoPago.objects
+        .filter(
+            MovimientoCajaId__turnoCajaId=OuterRef('pk'),
+            MovimientoCajaId__estado=True,
+            metodoPagoId_id=1
+        )
+        .order_by()
+        .values('MovimientoCajaId__turnoCajaId')
+        .annotate(total=Sum('monto'))
+        .values('total')[:1]
+    )
+
+    # Ingresos digitales
+    digital = (
+        MovimientoPago.objects
+        .filter(
+            MovimientoCajaId__turnoCajaId=OuterRef('pk'),
+            MovimientoCajaId__estado=True
+        )
+        .exclude(metodoPagoId_id=1)
+        .order_by()
+        .values('MovimientoCajaId__turnoCajaId')
+        .annotate(total=Sum('monto'))
+        .values('total')[:1]
+    )
+
+    # Egresos
+    egresos = (
+        MovimientoCaja.objects
+        .filter(
+            turnoCajaId=OuterRef('pk'),
+            estado=True,
+            tipoMovimientoCajaId__Tipo='Egreso'
+        )
+        .order_by()
+        .values('turnoCajaId')
+        .annotate(total=Sum('monto'))
+        .values('total')[:1]
+    )
+
+    return (
+        queryset
+        .select_related(
+            'EmpleadoId',
+            'NumCajaid'
+        )
+        .annotate(
+            _efectivo=Coalesce(
+                Subquery(efectivo, output_field=dinero),
+                cero
+            ),
+            _digital=Coalesce(
+                Subquery(digital, output_field=dinero),
+                cero
+            ),
+            _egresos=Coalesce(
+                Subquery(egresos, output_field=dinero),
+                cero
+            )
+        )
+        .annotate(
+            efectivo_esperado_calc=ExpressionWrapper(
+                F('SaldoInicial') + F('_efectivo') - F('_egresos'),
+                output_field=dinero
+            ),
+            digital_esperado_calc=F('_digital')
+        )
+    )
+
+
 
 class CajaApiView(APIView):
     permission_classes = [IsAuthenticated]
@@ -63,23 +169,97 @@ class CajaIDAPIView(APIView):
 
 class TurnoCajaApiView(APIView):
     permission_classes = [IsAuthenticated]
-
+        
+    
     def get(self, request):
-        # Admins ven todo el historial, empleados ven sus asignaciones
-        if request.user.is_staff:
-            turnos = TurnoCaja.objects.filter(estado=True).order_by('-id')
-        else:
-            # CORRECCIÓN: Se usa EmpleadoId__usuario para navegar la relación inversa definida en User
-            empleado = getattr(request.user, 'empleado', None) or getattr(request.user, 'usuario', None)
-            if not empleado:
-                return Response(
-                    {'error': f'El usuario "{request.user.username}" no tiene un perfil de empleado asignado.'},
-                    status=status.HTTP_400_BAD_REQUEST
+
+        inicio_total = perf_counter()
+
+        estadisticas = {
+            "consultas_sql": 0,
+            "tiempo_sql_execute": 0.0
+        }
+
+        def medir_sql(execute, sql, params, many, context):
+
+            inicio_sql = perf_counter()
+
+            try:
+                return execute(sql, params, many, context)
+
+            finally:
+                duracion = perf_counter() - inicio_sql
+                estadisticas["consultas_sql"] += 1
+                estadisticas["tiempo_sql_execute"] += duracion
+
+        with connection.execute_wrapper(medir_sql):
+
+            if request.user.is_staff:
+
+                turnos = TurnoCaja.objects.filter(
+                    estado=True
+                ).order_by('-id')
+
+            else:
+
+                empleado = (
+                    getattr(request.user, 'empleado', None)
+                    or getattr(request.user, 'usuario', None)
                 )
-            turnos = TurnoCaja.objects.filter(estado=True, EmpleadoId=empleado).order_by('-id')
-            
-        serializer = TurnoCajaSerializer(turnos, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+                if not empleado:
+                    return Response(
+                        {
+                            'error': 'El usuario no tiene un perfil de empleado asignado.'
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                turnos = TurnoCaja.objects.filter(
+                    estado=True,
+                    EmpleadoId=empleado
+                ).order_by('-id')
+
+            # APLICAR OPTIMIZACIÓN
+            turnos = turnos_con_totales(turnos)
+
+            # Verificar anotaciones
+            print("\n========== VERIFICACION OPTIMIZACION TURNO ==========")
+            print(
+                "Anotaciones:",
+                list(turnos.query.annotations.keys())
+            )
+            print(
+                "Select related:",
+                turnos.query.select_related
+            )
+            print("====================================================\n")
+
+            serializer = TurnoCajaSerializer(
+                turnos,
+                many=True
+            )
+
+            datos = serializer.data
+
+        tiempo_total = perf_counter() - inicio_total
+
+        tiempo_sql = estadisticas["tiempo_sql_execute"]
+
+        tiempo_fuera_execute = tiempo_total - tiempo_sql
+
+        print("\n========== DIAGNOSTICO TURNO CAJA ==========")
+        print(f"Consultas SQL: {estadisticas['consultas_sql']}")
+        print(f"Tiempo acumulado execute SQL: {tiempo_sql:.4f} segundos")
+        print(f"Tiempo fuera de execute SQL: {tiempo_fuera_execute:.4f} segundos")
+        print(f"Tiempo total GET: {tiempo_total:.4f} segundos")
+        print("============================================\n")
+
+        return Response(
+            datos,
+            status=status.HTTP_200_OK
+        )
+
     
     @swagger_auto_schema(request_body=TurnoCajaSerializer, responses={201: TurnoCajaSerializer})
     def post(self, request):
