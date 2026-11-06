@@ -18,7 +18,7 @@ from config.mongodb import (
     db_mongo,
 )
 
-coleccion_encuestas = db_mongo["encuestas_satisfaccion"]
+coleccion_encuestas = db_mongo["Encuesta"]
 
 # Importar el serializer de encuestas.
 from .serializers import EncuestaSerializer
