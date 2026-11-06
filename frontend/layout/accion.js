@@ -1361,74 +1361,137 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 let FacturaID = null;
+let facturaSiguienteURL = null;
+let facturaAnteriorURL = null;
+let paginaActualFactura = 1;
 
-async function cargarFactura() {
-  const cargando = document.getElementById("cargandoFactura");
-  const tabla = document.getElementById("tablaFactura");
-  const tbody = document.getElementById("bodyFactura");
+function obtenerRutaFactura(urlCompleta) {
+    const url = new URL(urlCompleta, urlAPI);
 
-  cargando.style.display = "block";
-  tabla.classList.remove("visible");
+    // Extraemos únicamente la ruta y los parámetros del cursor.
+    // La petición siempre utilizará el dominio configurado en urlAPI.
+    return url.pathname + url.search + url.hash;
+}
 
-  try {
-    // Usamos tu función con autenticación automática.
-    //fetchConAutenticacion ya concatena urlAPI internamente según el diseño previo.
-    let respuesta = await fetchConAutenticacion("movimiento/factura/");
-    const dato = await respuesta.json();
+async function cargarFactura(
+    ruta = "movimiento/factura/",
+    cambioPagina = 0
+) {
+    const cargando = document.getElementById("cargandoFactura");
+    const tabla = document.getElementById("tablaFactura");
+    const tbody = document.getElementById("bodyFactura");
 
-    const facturas = Array.isArray(dato) ? dato : dato.results;
-    let filas = "";
+    const btnAnterior = document.getElementById("anteriorFactura");
+    const btnSiguiente = document.getElementById("siguienteFactura");
+    const estadoPagina = document.getElementById("estadoPaginacionFactura");
 
-    for (let i = 0; i < facturas.length; i++) {
-      let factura = facturas[i];
+    cargando.style.display = "block";
+    tabla.classList.remove("visible");
 
-      filas += "<tr>";
-      filas += "<td>" + (i + 1) + "</td>";
-      filas += '<td class="td-nombreEmp">' + factura.NumFactura + "</td>";
-      filas +=
-        "<td>" +
-        factura.cliente_nombre +
-        " " +
-        factura.cliente_cedula +
-        "</td>";
-      filas += "<td>" + factura.fecha_formateada + "</td>";
-      filas += `<td>C$ ${factura.Total.toLocaleString("es-NI")}</td>`;
-      filas += "<td>" + factura.condicion_nombre + "</td>";
-      //filas += '<td>'+factura.estadoCuenta_nommbre+'</td>'
-      filas += '<td class="td-acciones">';
+    try {
+        // Convertir next/previous a rutas compatibles con auth.js.
+        const rutaAPI = obtenerRutaFactura(ruta);
 
-      filas += `<button class="btn-accion" style="background:rgba(6,182,212,0.15);color:#0e7490;border:1px solid rgba(6,182,212,0.4);"
-                  onclick="verDetalleFactura(${factura.id}, ${factura.NumFactura})">
-                  🔍 Detalles
-                </button>`;
-      filas += "</td>";
+        let respuesta = await fetchConAutenticacion(rutaAPI);
 
-      // aciones
-      filas += '<td class="td-acciones">';
-      filas +=
-        '<button class="btn-accion btn-editar" ' +
-        `onclick="abrirModalfactura('editar', ${factura.id}, '${factura.NumFactura}','${factura.ClienteId}', '${factura.Fecha}','${factura.Total}', '${factura.condicionId}', '${factura.estadoCuentaId}')">` +
-        "✏ Editar" +
-        "</button>";
-      filas +=
-        '<button class="btn-accion btn-eliminar" ' +
-        `onclick="eliminarFactura(${factura.id}, '${factura.NumFactura}', '${factura.cliente_nombre}')">` +
-        "🗑 Eliminar" +
-        "</button>";
-      filas += " </td>";
-      filas += "</tr>";
+        if (!respuesta.ok) {
+            throw new Error(`Error HTTP: ${respuesta.status}`);
+        }
+
+        const dato = await respuesta.json();
+
+        // Obtener registros de la página actual.
+        const facturas = Array.isArray(dato) ? dato : dato.results;
+
+        // Guardar los enlaces de navegación que devuelve Django.
+        facturaSiguienteURL = dato.next || null;
+        facturaAnteriorURL = dato.previous || null;
+
+        paginaActualFactura += cambioPagina;
+
+        let filas = "";
+
+        for (let i = 0; i < facturas.length; i++) {
+            let factura = facturas[i];
+
+            filas += "<tr>";
+            filas += "<td>" + (i + 1) + "</td>";
+            filas += '<td class="td-nombreEmp">' + factura.NumFactura + "</td>";
+
+            filas +=
+                "<td>" +
+                factura.cliente_nombre +
+                " " +
+                factura.cliente_cedula +
+                "</td>";
+
+            filas += "<td>" + factura.fecha_formateada + "</td>";
+            filas += `<td>C$ ${factura.Total.toLocaleString("es-NI")}</td>`;
+            filas += "<td>" + factura.condicion_nombre + "</td>";
+
+            // Detalles
+            filas += '<td class="td-acciones">';
+
+            filas += `<button class="btn-accion"
+                style="background:rgba(6,182,212,0.15);color:#0e7490;border:1px solid rgba(6,182,212,0.4);"
+                onclick="verDetalleFactura(${factura.id}, ${factura.NumFactura})">
+                🔍 Detalles
+            </button>`;
+
+            filas += "</td>";
+
+            // Acciones
+            filas += '<td class="td-acciones">';
+
+            filas +=
+                '<button class="btn-accion btn-editar" ' +
+                `onclick="abrirModalfactura('editar', ${factura.id}, '${factura.NumFactura}','${factura.ClienteId}', '${factura.Fecha}','${factura.Total}', '${factura.condicionId}', '${factura.estadoCuentaId}')">` +
+                "✏ Editar" +
+                "</button>";
+
+            filas +=
+                '<button class="btn-accion btn-eliminar" ' +
+                `onclick="eliminarFactura(${factura.id}, '${factura.NumFactura}', '${factura.cliente_nombre}')">` +
+                "🗑 Eliminar" +
+                "</button>";
+
+            filas += "</td>";
+            filas += "</tr>";
+        }
+
+        tbody.innerHTML = filas;
+
+        // Actualizar estado de los botones.
+        btnAnterior.disabled = !facturaAnteriorURL;
+        btnSiguiente.disabled = !facturaSiguienteURL;
+
+        // Mostrar página actual.
+        estadoPagina.textContent = `Página ${paginaActualFactura}`;
+
+        // Eventos de navegación.
+        btnAnterior.onclick = () => {
+            if (facturaAnteriorURL) {
+                cargarFactura(facturaAnteriorURL, -1);
+            }
+        };
+
+        btnSiguiente.onclick = () => {
+            if (facturaSiguienteURL) {
+                cargarFactura(facturaSiguienteURL, 1);
+            }
+        };
+
+        cargando.style.display = "none";
+        tabla.classList.add("visible");
+
+        activarBuscadorGlobal("buscarFactura", "#bodyFactura tr");
+
+    } catch (error) {
+        cargando.textContent =
+            "⚠ No se pudieron cargar las facturas. Verifique la conexión con la API.";
+
+        console.error("Error en cargarFactura:", error);
     }
-
-    tbody.innerHTML = filas;
-    cargando.style.display = "none";
-    tabla.classList.add("visible");
-
-    activarBuscadorGlobal("buscarFactura", "#bodyFactura tr");
-  } catch (error) {
-    cargando.textContent =
-      "⚠ Error al conectar con la API local. ¿Está corriendo el servidor Django?";
-    console.error("Error en cargarFactura:", error);
-  }
 }
 
 async function cargarOpcionesClientes() {

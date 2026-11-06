@@ -159,20 +159,48 @@
                     </table>
                 </section>
 
+                
                 <section id="facturas" class="seccion">
                     <div class="tabla-contenido">
                         <div class="tabla-cabecera">
                             <h2>Lista de facturas</h2>
-                            <input type="text" class="buscador" id="buscarFactura" placeholder="🔍 Buscar factura...">
+                            <input type="text" class="buscador" id="buscarFactura"
+                                placeholder="🔍 Buscar factura...">
                         </div>
+
                         <div class="cargando" id="cargandoFactura">
                             ⏳ Cargando datos desde la API...
                         </div>
-                        <button class="btn btn-primario" onclick="abrirModalfactura('crear')">
+
+                        <button class="btn btn-primario"
+                            onclick="abrirModalfactura('crear')">
                             + Nuevo factura
                         </button>
                     </div>
-                        
+
+                    <!-- Paginación por cursor -->
+                    <div class="paginacion" id="paginacionFactura">
+
+                        <button class="btn-paginacion"
+                            id="anteriorFactura"
+                            type="button"
+                            disabled>
+                            ← Anterior
+                        </button>
+
+                        <span id="estadoPaginacionFactura">
+                            Página 1
+                        </span>
+
+                        <button class="btn-paginacion"
+                            id="siguienteFactura"
+                            type="button"
+                            disabled>
+                            Siguiente →
+                        </button>
+
+                    </div>
+
                     <table class="tabla" id="tablaFactura">
                         <thead>
                             <tr>
@@ -182,18 +210,17 @@
                                 <th>Fecha</th>
                                 <th>Total</th>
                                 <th>Condicion</th>
-                                
                                 <th>Detalle de factura</th>
                                 <th>Acciones</th>
-
                             </tr>
                         </thead>
-                        <tbody id="bodyFactura">
-                        </tbody>
+
+                        <tbody id="bodyFactura"></tbody>
                     </table>
 
                     
                 </section>
+
 
                 <section id="caja" class="seccion">
                     <div class="tabla-contenido">

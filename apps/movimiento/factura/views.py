@@ -24,6 +24,8 @@ from django.db.models import Prefetch
 from apps.movimiento.caja.models import MovimientoCaja
 
 from apps.movimiento.movimientoPago.models import MovimientoPago
+#paginaciones 
+from .pagination import FacturaCursorPagination
 #------------------------------
 # FACTURA
 #------------------------------
@@ -39,7 +41,6 @@ class FacturaAPIView (APIView):
             "tiempo_sql_execute": 0.0
         }
 
-        # Medir las ejecuciones SQL realizadas por Django
         def medir_sql(execute, sql, params, many, context):
 
             inicio_sql = perf_counter()
@@ -53,7 +54,6 @@ class FacturaAPIView (APIView):
                 estadisticas["consultas_sql"] += 1
                 estadisticas["tiempo_sql_execute"] += duracion
 
-        # Medir la recuperación y serialización
         with connection.execute_wrapper(medir_sql):
 
             queryset = Facturas.objects.filter(
@@ -63,7 +63,6 @@ class FacturaAPIView (APIView):
                 'condicionId'
             ).prefetch_related(
 
-                # 1. Detalles de factura y relaciones del producto
                 Prefetch(
                     'detalles',
                     queryset=DetalleFactura.objects.select_related(
@@ -71,7 +70,6 @@ class FacturaAPIView (APIView):
                     )
                 ),
 
-                # 2. Créditos de las facturas
                 Prefetch(
                     'facturascredito_set',
                     queryset=FacturasCredito.objects.select_related(
@@ -80,34 +78,43 @@ class FacturaAPIView (APIView):
                     to_attr='creditos_prefetch'
                 ),
 
-                # 3. Movimientos de caja
                 Prefetch(
                     'movimientocaja_set',
                     queryset=MovimientoCaja.objects.select_related(
                         'tipoMovimientoCajaId',
                         'turnoCajaId'
                     ).prefetch_related(
-
-                        # 4. Pagos asociados al movimiento
                         Prefetch(
                             'movimientopago_set',
                             queryset=MovimientoPago.objects.select_related(
                                 'metodoPagoId'
                             )
                         )
-
                     ).order_by('pk'),
                     to_attr='movimientos_caja_prefetch'
                 )
 
             ).order_by('-id')
 
-            serializer = FacturaSerializer(
+            # 1. Aplicar paginación
+            paginador = FacturaCursorPagination()
+
+            pagina = paginador.paginate_queryset(
                 queryset,
+                request,
+                view=self
+            )
+
+            # 2. Serializar únicamente los registros de esta página
+            serializer = FacturaSerializer(
+                pagina,
                 many=True
             )
 
             datos = serializer.data
+
+            # 3. Construir respuesta paginada
+            respuesta = paginador.get_paginated_response(datos)
 
         tiempo_total = perf_counter() - tiempo_inicio
 
@@ -121,7 +128,7 @@ class FacturaAPIView (APIView):
         print(f"Tiempo total GET: {tiempo_total:.4f} segundos")
         print("==========================================\n")
 
-        return Response(data=datos)
+        return respuesta
     
     @swagger_auto_schema(request_body=FacturaSerializer)
     def post(self, request):
